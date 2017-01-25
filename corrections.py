@@ -108,3 +108,14 @@ def calc_haversine_distance(p1, p2):
     return d
 
 
+
+# latitude_scale = [
+#     get_latitude_scale(fsrc_affine[5] - fsrc_affine[0] * (0.5 + i))
+#     for i in range(fsrc_shape[0])
+# ]
+
+# feature_stats['mean'] = float(
+#     np.sum((masked.T * latitude_scale).T) /
+#     np.sum(latitude_scale * (masked.shape[1] - np.sum(masked.mask, axis=1))))
+
+

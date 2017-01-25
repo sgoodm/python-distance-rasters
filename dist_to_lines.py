@@ -14,50 +14,43 @@ from corrections import (euclidean_distance, euclidean_direction,
                          latitude_correction_magnitude, index_to_coords,
                          get_latitude_scale, calc_haversine_distance)
 
+from rasterize import rasterize, fake_rasterize
 
 
-# x = np.random.randint(2, size=(int(180/10), int(360/10)))
-# x = np.random.randint(2, size=(10, 20))
+# shp_path = "line_test/line_test.shp"
+shp_path = "ca_riv_30s/ca_riv_30s.shp"
 
-pixel_size = 0.1
-x = np.random.choice([0, 1], size=(int(180/pixel_size), int(360/pixel_size)), p=[.8, .2])
+# 0.1 is probably too coarse for quality
+# 0.001 might be more than we need for quality
+#   test with central america rivers @ 30s res
+#   run time for rasterization was reasonable
+#   distance processes may be too slow at this fine scale though
+# testing with 0.01 for now
+pixel_size = 0.01
+
+output_raster_path = "line_test_raster.tif"
+
+rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=0.01, output=output_raster_path)
+# rv_array = fake_rasterize()
 
 
-# xmin = 10
-# xmax = 30
-# ymin = 30
-# ymax = 40
-# bnds = [xmin, ymin, xmax, ymax]
+# max distance in cells
+# for actual distance: max_dist * pixel_size
+max_dist = 100
 
-
-max_dist = 40
-
-# x = np.array([
-#     [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-#     [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-#     [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1],
-#     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
-# ])
-
-nrows, ncols = x.shape
+nrows, ncols = rv_array.shape
 
 
 
-# print x
-print x.shape
+# print rv_array
+print rv_array.shape
 print nrows * ncols
 
 
 
-z = np.empty(x.shape, dtype=float)
+z = np.empty(rv_array.shape, dtype=float)
 
-
+raise
 import time
 for r in range(nrows):
     trow_start = int(time.time())
@@ -70,15 +63,15 @@ for r in range(nrows):
         rright = r+max_dist if r<=nrows-max_dist else nrows
         cleft = c-max_dist if c>=max_dist else 0
         cright = c+max_dist if c<=ncols-max_dist else ncols
-        print rleft, rright, cleft, cright
+        # print rleft, rright, cleft, cright
 
-        x1 = x[rleft:rright, cleft:cright]
-        print x1
+        x1 = rv_array[rleft:rright, cleft:cright]
+        # print x1
 
         # actual_indexes =
 
         y = np.ma.masked_array(x1, mask=(x1==0))
-        print y
+        # print y
 
         line_prep = np.ma.nonzero(y)
         line_indexes = zip(line_prep[0], line_prep[1])
@@ -108,28 +101,29 @@ for r in range(nrows):
 
 
         dx, dy = euclidean_direction(cur_index, min_index)
-        print dx, dy
+        # print dx, dy
 
 
         c = latitude_correction_magnitude(dx, dy)
-        print c
+        # print c
 
         # print latitude_correction_magnitude(*euclidean_direction(cur_index, min_index))
 
         # print min_dist, min_dist * c *
         z[r][c] = min_dist
 
-        raise
+        # raise
 
 
     trow_end = int(time.time())
     row_dur = trow_end - trow_start
     print "Row {0} ran in {1} seconds".format(r, row_dur)
 
-    # raise
+    if r == 5:
+        raise
 
 
-print x
+print rv_array
 print z
 
 
