@@ -1,47 +1,5 @@
 
 
-import fiona
-import rasterio
-from rasterio import features
-from affine import Affine
-
-
-
-def rasterize_geom(geom, shape, affine, all_touched=False):
-    geoms = [(geom, 1)]
-    rv_array = features.rasterize(
-        geoms,
-        out_shape=shape,
-        transform=affine,
-        fill=0,
-        all_touched=all_touched)
-    return rv_array
-
-
-
-new_affine = Affine(pixel_size, 0, topleftlon,
-                0, -pixel_size, topleftlat)
-
-new_shape = (shape[0]*scale, shape[1]*scale)
-
-rv_array = rasterize_geom(geom, new_shape, new_affine, all_touched=all_touched)
-
-
-
-
-latitude_scale = [
-                get_latitude_scale(fsrc_affine[5] - fsrc_affine[0] * (0.5 + i))
-                for i in range(fsrc_shape[0])
-            ]
-
-feature_stats['mean'] = float(
-                            np.sum((masked.T * latitude_scale).T) /
-                            np.sum(latitude_scale * (masked.shape[1] - np.sum(masked.mask, axis=1))))
-
-
-
-
-
 # from scipy import spatial
 # from scipy.spatial import KDTree as kdt
 
@@ -52,8 +10,8 @@ import math
 # from scipy.spatial import distance
 import distance
 
-from corrections import (euclidean_distance, euclidean_direction, 
-                         latitude_correction_magnitude, index_to_coords, 
+from corrections import (euclidean_distance, euclidean_direction,
+                         latitude_correction_magnitude, index_to_coords,
                          get_latitude_scale, calc_haversine_distance)
 
 
@@ -66,7 +24,7 @@ x = np.random.choice([0, 1], size=(int(180/pixel_size), int(360/pixel_size)), p=
 
 
 # xmin = 10
-# xmax = 30 
+# xmax = 30
 # ymin = 30
 # ymax = 40
 # bnds = [xmin, ymin, xmax, ymax]
@@ -117,7 +75,7 @@ for r in range(nrows):
         x1 = x[rleft:rright, cleft:cright]
         print x1
 
-        # actual_indexes = 
+        # actual_indexes =
 
         y = np.ma.masked_array(x1, mask=(x1==0))
         print y
@@ -152,7 +110,7 @@ for r in range(nrows):
         dx, dy = euclidean_direction(cur_index, min_index)
         print dx, dy
 
-        
+
         c = latitude_correction_magnitude(dx, dy)
         print c
 
@@ -167,7 +125,7 @@ for r in range(nrows):
     trow_end = int(time.time())
     row_dur = trow_end - trow_start
     print "Row {0} ran in {1} seconds".format(r, row_dur)
-    
+
     # raise
 
 
