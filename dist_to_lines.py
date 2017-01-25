@@ -30,8 +30,8 @@ pixel_size = 0.01
 
 output_raster_path = "line_test_raster.tif"
 
-rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=0.01, output=output_raster_path)
-# rv_array = fake_rasterize()
+# rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=0.01, output=output_raster_path)
+rv_array = fake_rasterize()
 
 
 # max distance in cells
@@ -50,7 +50,8 @@ print nrows * ncols
 
 z = np.empty(rv_array.shape, dtype=float)
 
-raise
+
+
 import time
 for r in range(nrows):
     trow_start = int(time.time())
@@ -66,7 +67,7 @@ for r in range(nrows):
         # print rleft, rright, cleft, cright
 
         x1 = rv_array[rleft:rright, cleft:cright]
-        # print x1
+        print x1
 
         # actual_indexes =
 
@@ -76,7 +77,7 @@ for r in range(nrows):
         line_prep = np.ma.nonzero(y)
         line_indexes = zip(line_prep[0], line_prep[1])
         print len(line_indexes)
-        # print line_indexes
+        print line_indexes
 
         if len(line_indexes) == 0:
             z[r][c] = -1
@@ -101,16 +102,23 @@ for r in range(nrows):
 
 
         dx, dy = euclidean_direction(cur_index, min_index)
-        # print dx, dy
+        print dx, dy
 
+        if dx != 0 and dy != 0:
+            theta = np.tan(dy/dx)
+            delta_dy = np.sin(theta) * min_dist / 2
+            haversine_index = cur_index[0] + delta_dy # does sign of delta_dy account for direction (N vs S)
+
+            # haversine_lat = convert_index_to_lat(haversine_index)
+            # h = get_latitude_scale(haversine_lat) # haversine scale
 
         c = latitude_correction_magnitude(dx, dy)
         # print c
 
         # print latitude_correction_magnitude(*euclidean_direction(cur_index, min_index))
 
-        # print min_dist, min_dist * c *
-        z[r][c] = min_dist
+        # print min_dist, min_dist * (c * h)
+        z[r][c] = min_dist # * (c * h)
 
         # raise
 

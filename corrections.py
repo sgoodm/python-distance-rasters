@@ -4,16 +4,16 @@ import numpy as np
 def euclidean_distance(p1, p2):
     """euclidean distance between 2 points
     """
-    x1, y1 = p1
-    x2, y2 = p2
+    y1, x1 = p1
+    y2, x2 = p2
     return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
 
 def euclidean_direction(p1, p2):
     """direction between two points
     """
-    x1, y1 = p1
-    x2, y2 = p2
+    y1, x1 = p1
+    y2, x2 = p2
     return (x2-x1, y2-y1)
 
 
