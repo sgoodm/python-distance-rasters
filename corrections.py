@@ -1,5 +1,7 @@
 import math
 import numpy as np
+from affine import Affine
+
 
 def euclidean_distance(p1, p2):
     """euclidean distance between 2 points
@@ -33,7 +35,7 @@ def latitude_correction_magnitude(dx, dy):
         return 1 - (np.arctan(dy/dx) * 180/math.pi) / 90
 
 
-def index_to_coords(left, top, ix, iy, pixel_size):
+def convert_index_to_coords(index, affine):
     """convert index values to coordinates
 
     used to converted x,y index of 2d matrix element
@@ -42,15 +44,31 @@ def index_to_coords(left, top, ix, iy, pixel_size):
     matrix as well as pixel size represented by
     each element
 
-   returns centroids of pixels for accurate distance
+    returns centroids of pixels for accurate distance
     calculations using results
     """
-    lon = left + pixel_size * (ix + 0.5)
-    lat = top - pixel_size * (iy + 0.5)
+    r, c = index
+
+    pixel_size = affine[0]
+    xmin = affine[2]
+    lon = xmin + pixel_size * (0.5 + c)
+
+    ymax = affine[5]
+    lat = ymax - pixel_size * (0.5 + r)
+
     return (lon, lat)
 
 
+def convert_index_to_lat(ix, affine):
+    if not isinstance(ix, int):
+        raise TypeError('Index must be integer')
+    if not isinstance(affine, Affine):
+        raise TypeError('Not a valid affine instance')
 
+    pixel_size = affine[0]
+    ymax = affine[5]
+    lat = ymax - pixel_size * (0.5 + ix)
+    return lat
 
 
 def get_latitude_scale(lat):
@@ -91,31 +109,15 @@ def calc_haversine_distance(p1, p2):
     """
     lon1, lat1 = p1
     lon2, lat2 = p2
-
     # km
     radius = 6371.0
-
+    # difference in rads
     delta_lat = math.radians(lat2 - lat1)
     delta_lon = math.radians(lon2 - lon1)
-
     a = (math.sin(delta_lat/2)**2 + math.cos(math.radians(lat1)) *
          math.cos(math.radians(lat2)) * math.sin(delta_lon/2)**2)
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-
     # km
     d = radius * c
-
     return d
-
-
-
-# latitude_scale = [
-#     get_latitude_scale(fsrc_affine[5] - fsrc_affine[0] * (0.5 + i))
-#     for i in range(fsrc_shape[0])
-# ]
-
-# feature_stats['mean'] = float(
-#     np.sum((masked.T * latitude_scale).T) /
-#     np.sum(latitude_scale * (masked.shape[1] - np.sum(masked.mask, axis=1))))
-
 

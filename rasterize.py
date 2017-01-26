@@ -17,7 +17,8 @@ def fake_rasterize():
 
 
     pixel_size = 0.1
-    x = np.random.choice([0, 1], size=(int(180/pixel_size), int(360/pixel_size)), p=[.8, .2])
+    x = np.random.choice([0, 1], size=(int(180/pixel_size), int(360/pixel_size)),
+                         p=[.8, .2])
 
 
 
@@ -103,7 +104,7 @@ def rasterize(path, pixel_size=None, output=None):
             'driver': 'GTiff',
             'height': shape[0],
             'width': shape[1],
-            'nodata': 0,
+            # 'nodata': 0,
             # 'compress': 'lzw'
         }
 
