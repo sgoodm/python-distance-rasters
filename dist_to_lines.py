@@ -21,14 +21,14 @@ from rasterize import rasterize, fake_rasterize
 
 
 
-shp_path = "line_test/line_test.shp"
-rasterized_feature_output_path = "line_test_raster.tif"
-output_raster_path = "line_test_distance_raster.tif"
+shp_path = "data/line_test/line_test.shp"
+rasterized_feature_output_path = "data/line_test_raster.tif"
+output_raster_path = "data/line_test_distance_raster.tif"
 
 
-shp_path = "ca_riv_30s/ca_riv_30s.shp"
-rasterized_feature_output_path = "ca_riv_30s_raster.tif"
-output_raster_path = "ca_riv_30s_distance_raster.tif"
+shp_path = "data/ca_riv_30s/ca_riv_30s.shp"
+rasterized_feature_output_path = "data/ca_riv_30s_raster.tif"
+output_raster_path = "data/ca_riv_30s_distance_raster.tif"
 
 
 
