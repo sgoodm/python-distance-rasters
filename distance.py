@@ -2,20 +2,10 @@
 #
 # Copyright (C) Damian Eads, 2007-2008. New BSD License.
 
-from __future__ import division, print_function, absolute_import
-
-__all__ = [
-    'euclidean'
-]
-
 
 import numpy as np
-
-# from . import _distance_wrap
-# from ..linalg import norm
-
 from scipy.spatial import _distance_wrap
-from scipy.linalg import norm
+
 
 def _copy_array_if_base_present(a):
     """
@@ -29,14 +19,6 @@ def _copy_array_if_base_present(a):
         return a
 
 
-def _convert_to_bool(X):
-    if X.dtype != bool:
-        X = X.astype(bool)
-    if not X.flags.contiguous:
-        X = X.copy()
-    return X
-
-
 def _convert_to_double(X):
     if X.dtype != np.double:
         X = X.astype(np.double)
@@ -45,53 +27,7 @@ def _convert_to_double(X):
     return X
 
 
-def _validate_vector(u, dtype=None):
-    # XXX Is order='c' really necessary?
-    u = np.asarray(u, dtype=dtype, order='c').squeeze()
-    # Ensure values such as u=1 and u=[1] still return 1-D arrays.
-    u = np.atleast_1d(u)
-    if u.ndim > 1:
-        raise ValueError("Input vector should be 1-D.")
-    return u
-
-
-def euclidean(u, v):
-    """
-    Computes the Euclidean distance between two 1-D arrays.
-
-    The Euclidean distance between 1-D arrays `u` and `v`, is defined as
-
-    .. math::
-
-       {||u-v||}_2
-
-    Parameters
-    ----------
-    u : (N,) array_like
-        Input array.
-    v : (N,) array_like
-        Input array.
-
-    Returns
-    -------
-    euclidean : double
-        The Euclidean distance between vectors `u` and `v`.
-
-    """
-    u = _validate_vector(u)
-    v = _validate_vector(v)
-    dist = norm(u - v)
-    return dist
-
-
-
-_SIMPLE_CDIST = {}
-cdist_fn = getattr(_distance_wrap, "cdist_euclidean_wrap")
-_SIMPLE_CDIST["euclidean"] = _convert_to_double, cdist_fn
-
-
-
-def cdist(XA, XB, metric='euclidean', p=2, V=None, VI=None, w=None):
+def cdist(XA, XB):
     """
     Computes distance between each pair of the two collections of inputs.
 
@@ -172,29 +108,19 @@ def cdist(XA, XB, metric='euclidean', p=2, V=None, VI=None, w=None):
     s = XA.shape
     sB = XB.shape
 
-    if len(s) != 2:
-        raise ValueError('XA must be a 2-dimensional array.')
-    if len(sB) != 2:
-        raise ValueError('XB must be a 2-dimensional array.')
-    if s[1] != sB[1]:
-        raise ValueError('XA and XB must have the same number of columns '
-                         '(i.e. feature dimension.)')
+    # if len(s) != 2:
+    #     raise ValueError('XA must be a 2-dimensional array.')
+    # if len(sB) != 2:
+    #     raise ValueError('XB must be a 2-dimensional array.')
+    # if s[1] != sB[1]:
+    #     raise ValueError('XA and XB must have the same number of columns '
+    #                      '(i.e. feature dimension.)')
 
     mA = s[0]
     mB = sB[0]
-    n = s[1]
     dm = np.zeros((mA, mB), dtype=np.double)
-
   
-    mstr = metric.lower()
-
-    try:
-        validate, cdist_fn = _SIMPLE_CDIST[mstr]
-        XA = validate(XA)
-        XB = validate(XB)
-        cdist_fn(XA, XB, dm)
-        return dm
-    except KeyError:
-        pass
+    cdist_fn = getattr(_distance_wrap, "cdist_euclidean_wrap")
+    cdist_fn(XA, XB, dm)
 
     return dm
