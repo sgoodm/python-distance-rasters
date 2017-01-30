@@ -20,15 +20,24 @@ from corrections import (euclidean_distance, euclidean_direction,
 from rasterize import rasterize, fake_rasterize
 
 
+# -------------------------------------
 
-shp_path = "data/line_test/line_test.shp"
-rasterized_feature_output_path = "data/line_test_raster.tif"
-output_raster_path = "data/line_test_distance_raster.tif"
+# shp_path = "data/line_test/line_test.shp"
+# out_name = "line_test"
 
+# shp_path = "data/line_test/big_line.shp"
+# out_name = "big_line"
 
-shp_path = "data/ca_riv_30s/ca_riv_30s.shp"
-rasterized_feature_output_path = "data/ca_riv_30s_raster.tif"
-output_raster_path = "data/ca_riv_30s_distance_raster.tif"
+# shp_path = "data/ca_riv_30s/ca_riv_30s.shp"
+# out_name = "ca_riv_30s_sub1"
+
+shp_path = "data/ca_riv_15s/ca_riv_15s.shp"
+out_name = "ca_riv_15s"
+
+# -------------------------------------
+
+rasterized_feature_output_path = "data/{0}_raster.tif".format(out_name)
+output_raster_path = "data/{0}_distance_raster.tif".format(out_name)
 
 
 
@@ -48,7 +57,7 @@ rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=pixel_size,
 
 # max distance in cells
 # for actual distance: max_dist * pixel_size
-max_dist = 200
+max_dist = 10
 
 nrows, ncols = rv_array.shape
 
@@ -64,7 +73,10 @@ z = np.empty(rv_array.shape, dtype=float)
 # -----------------------------------------------------------------------------
 
 import time
-t_start = int(time.time())
+t_start = time.time()
+
+row_dur = 0
+row_count = 0
 
 t1 = 0
 t1c = 0
@@ -80,13 +92,17 @@ t3 = 0
 t3c = 0
 
 for r in range(nrows):
-    trow_start = int(time.time())
+# for r in range(1000, 1100):
+
+    trow_start = time.time()
+
     for c in range(ncols):
+    # for c in range(1000, 1100):
 
         cur_index = (r, c)
-        print "Current index (r, c): {0}".format(cur_index)
-        print "Current coords (lon, lat): {0}".format(
-            convert_index_to_coords(cur_index, affine))
+        # print "Current index (r, c): {0}".format(cur_index)
+        # print "Current coords (lon, lat): {0}".format(
+            # convert_index_to_coords(cur_index, affine))
 
         t1s = time.time()
 
@@ -95,7 +111,6 @@ for r in range(nrows):
         cmin = c - max_dist if c >= max_dist else 0
         cmax = c + max_dist if c <= ncols - max_dist else ncols
 
-        
         t1 += time.time() - t1s
         t1c += 1
 
@@ -125,7 +140,7 @@ for r in range(nrows):
         # print len(line_indexes)
         # print line_indexes
         if len(line_indexes) == 0:
-            print "\tOut of range"
+            # print "\tOut of range"
             z[r][c] = -1
             continue
 
@@ -140,6 +155,7 @@ for r in range(nrows):
 
         t2 += time.time() - t2s
         t2c += 1
+
 
 
         t22s = time.time()
@@ -173,99 +189,63 @@ for r in range(nrows):
 
         t3s = time.time()
 
-        # values of change in x and y
-        # between current and nearest
-        dx, dy = euclidean_direction(cur_index, min_index)
+        if cur_index[1] == min_index[1]:
 
-        # negate dy value
-        # due to rows increase downward, opposite of latitude
-        dy = dy * -1
+            # columns are different meaning nearest is
+            # either vertical or self.
+            # no correction needed,
+            # just convert to meters
 
-        dd_min_dist = min_dist * pixel_size
-        m_min_dist = dd_min_dist * 111.321 * 10**3
+            dd_min_dist = min_dist * pixel_size
+            m_min_dist = dd_min_dist * 111.321 * 10**3
 
-        # print "\tdx: {0}, dy: {1}".format(dx, dy)
-        # print "\tdd_min_dist: {0}".format(dd_min_dist)
-        # print "\tm_min_dist: {0}".format(m_min_dist)
+            # print "\tdx: {0}, dy: {1}".format(dx, dy)
+            # print "\tdd_min_dist: {0}".format(dd_min_dist)
+            # print "\tm_min_dist: {0}".format(m_min_dist)
 
-
-        if dx == 0 and dy == 0:
-            # nearest is self
-            val = 0
-
-        elif dx == 0:
-            # nearest is vertical
-            # no correction needed
             val = m_min_dist
 
-        elif dy == 0:
-            # nearest is horizontal
-            # pure latitude correction
-            lat = convert_index_to_lat(cur_index[0], affine)
-            h = get_latitude_scale(lat)
-            val = m_min_dist * h
 
         else:
-            # latitude correction scaled based
-            # on direction of nearest
-            theta = np.tan(float(dy) / float(dx))
-            delta_dy = np.sin(theta) * (min_dist / 2)
 
-            # subtract `delta_dy` because we need to negate
-            # the original negation of `dy`
-            new_row_index = int(round(cur_index[0] - delta_dy))
-
-            # print "\ttheta: {0}".format(theta)
-            # print "\tdelta_dy: {0}".format(delta_dy)
-            # print "\tnew_row_index: {0}".format(new_row_index)
-
-            lat = convert_index_to_lat(new_row_index, affine)
-            h = get_latitude_scale(lat)
-            m = latitude_correction_magnitude(dx, dy)
-
-            # print "\tlat: {0}".format(lat)
-            # print "\tcorrection factor (h): {0}".format(h)
-            # print "\tcorrection magnitude (m): {0}".format(m)
-
-            val = m_min_dist * (h * m) + m_min_dist * (1 - m)
+            val = calc_haversine_distance(
+                convert_index_to_coords(cur_index, affine),
+                convert_index_to_coords(min_index, affine)
+            ) * 1000
 
 
         t3 += time.time() - t3s
         t3c += 1
 
-        print "\tval: {0}".format(val)
+        # print "\tval: {0}".format(val)
         z[r][c] = val
 
         # raise
 
 
-    trow_end = int(time.time())
-    row_dur = trow_end - trow_start
-    print "Row {0} ran in {1} seconds".format(r, row_dur)
+    row_dur += time.time() - trow_start
+    row_count += 1
 
-    if r == 20:
-        t_end = int(time.time())
-        dur = t_end - t_start
-        print "Run time: {0} seconds for {1} rows".format(dur, r+1)
+    # if r == 200:
+    #     print "Run time: {0} seconds for {1} rows ({2}s avg)".format(row_dur, row_count, row_dur/row_count)
 
-        print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
-        print "t11 total: {0}, count: {1}, avg: {2}".format(t11, t11c, t11/t11c)
-        print "t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c)
+    #     print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
+    #     print "t11 total: {0}, count: {1}, avg: {2}".format(t11, t11c, t11/t11c)
+    #     print "t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c)
 
-        print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
-        print "t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c)
-        print "t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c)
+    #     print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
+    #     print "t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c)
+    #     print "t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c)
 
-        raise
+    #     raise
 
 
 # print rv_array
 # print z
 
 
-t_end = int(time.time())
-dur = t_end - t_start
-print "Run time: {0} seconds".format(dur)
+dur = time.time() - t_start
+print "Run time: {0} seconds".format(round(dur, 2))
 
 
 out_dtype = 'float64'
