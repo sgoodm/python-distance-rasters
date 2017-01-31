@@ -1,8 +1,5 @@
 
 
-# from scipy import spatial
-# from scipy.spatial import KDTree as kdt
-
 import numpy as np
 import math
 
@@ -12,12 +9,9 @@ import rasterio
 # from scipy.spatial import distance
 import distance
 
-from corrections import (euclidean_distance, euclidean_direction,
-                         latitude_correction_magnitude,
-                         convert_index_to_coords, convert_index_to_lat,
-                         get_latitude_scale, calc_haversine_distance)
+from corrections import convert_index_to_coords, calc_haversine_distance
 
-from rasterize import rasterize, fake_rasterize
+from rasterize import rasterize
 
 
 # -------------------------------------
@@ -47,7 +41,7 @@ output_raster_path = "data/{0}_distance_raster.tif".format(out_name)
 #   run time for rasterization was reasonable
 #   distance processes may be too slow at this fine scale though
 # testing with 0.01 for now
-pixel_size = 0.01
+pixel_size = 0.1
 
 
 rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=pixel_size,
@@ -57,7 +51,7 @@ rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=pixel_size,
 
 # max distance in cells
 # for actual distance: max_dist * pixel_size
-max_dist = 10
+max_dist = 500
 
 nrows, ncols = rv_array.shape
 
@@ -75,13 +69,11 @@ z = np.empty(rv_array.shape, dtype=float)
 import time
 t_start = time.time()
 
-row_dur = 0
-row_count = 0
+# row_dur = 0
+# row_count = 0
 
 t1 = 0
 t1c = 0
-t11 = 0
-t11c = 0
 t111 = 0
 t111c = 0
 t2 = 0
@@ -94,7 +86,8 @@ t3c = 0
 for r in range(nrows):
 # for r in range(1000, 1100):
 
-    trow_start = time.time()
+    if r == 0 or r+1 % 50 == 0:
+        trow_start = time.time()
 
     for c in range(ncols):
     # for c in range(1000, 1100):
@@ -111,17 +104,11 @@ for r in range(nrows):
         cmin = c - max_dist if c >= max_dist else 0
         cmax = c + max_dist if c <= ncols - max_dist else ncols
 
-        t1 += time.time() - t1s
-        t1c += 1
-
-
-
-        t11s = time.time()
-
         sub_raster = rv_array[rmin:rmax, cmin:cmax]
 
-        t11 += time.time() - t11s
-        t11c += 1
+
+        t1 += time.time() - t1s
+        t1c += 1
 
 
         # print "\trmin: {0}, rmax: {1}, cmin: {2}, cmax: {3}, ".format(
@@ -161,6 +148,12 @@ for r in range(nrows):
         t22s = time.time()
 
         dist_list_index = np.where(dist_list == min_dist)
+
+        # # handle multiple min matches
+        # for i in dist_list_index:
+        #     print line_indexes[i]
+
+        # just take first if there are multiple min matches
         sub_min_index = line_indexes[dist_list_index[0][0]]
 
         # convert min_index from sub_raster to
@@ -173,17 +166,13 @@ for r in range(nrows):
 
 
         # print "\tsub_cur_index: {0}".format(sub_cur_index)
-
         # print "\tMin coords (lon, lat): {0}".format(
         #     convert_index_to_coords(min_index, affine))
 
-        # # for i in dist_list_index:
-        #     # print line_indexes[i]
-
         # print "\tsub_min_index: {0}".format(sub_min_index)
-        # # print dist_list
+        # print dist_list
         # print "\tmin_dist: {0}".format(min_dist)
-        # # print dist_list_index
+        # print dist_list_index
         # print "\tmin_index: {0}".format(min_index)
 
 
@@ -199,7 +188,6 @@ for r in range(nrows):
             dd_min_dist = min_dist * pixel_size
             m_min_dist = dd_min_dist * 111.321 * 10**3
 
-            # print "\tdx: {0}, dy: {1}".format(dx, dy)
             # print "\tdd_min_dist: {0}".format(dd_min_dist)
             # print "\tm_min_dist: {0}".format(m_min_dist)
 
@@ -222,9 +210,11 @@ for r in range(nrows):
 
         # raise
 
+    if r+1 % 50 == 0:
+        print "Row {0}-{1}/{2} ran in {3} seconds".format(r+1-50, r+1, nrows, time.time() - trow_start)
 
-    row_dur += time.time() - trow_start
-    row_count += 1
+    # row_dur += time.time() - trow_start
+    # row_count += 1
 
     # if r == 200:
     #     print "Run time: {0} seconds for {1} rows ({2}s avg)".format(row_dur, row_count, row_dur/row_count)
@@ -243,9 +233,21 @@ for r in range(nrows):
 # print rv_array
 # print z
 
+print rv_array.shape
+print nrows * ncols
+
+print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
+print "t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c)
+
+print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
+print "t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c)
+print "t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c)
 
 dur = time.time() - t_start
 print "Run time: {0} seconds".format(round(dur, 2))
+
+
+raise
 
 
 out_dtype = 'float64'
