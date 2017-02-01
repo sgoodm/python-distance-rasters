@@ -3,7 +3,7 @@
 import numpy as np
 import rasterio
 
-from scipy.spatial import cKDTree as kdt
+from scipy.spatial import cKDTree
 
 from rasterize import rasterize
 from corrections import convert_index_to_coords, calc_haversine_distance
@@ -47,19 +47,37 @@ print nrows * ncols
 
 # raise
 
-# kd-tree instance
-# https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.spatial.cKDTree.html
-k = kdt(
-    data=np.array(np.where(rv_array == 1)).T
-)
 
 # array for distance raster results
 z = np.empty(rv_array.shape, dtype=float)
 
+
 # -----------------------------------------------------------------------------
+
 
 import time
 t_start = time.time()
+
+
+# kd-tree instance
+# https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.spatial.cKDTree.html
+#
+# Alternatives (slower during testing):
+#   from sklearn.neighbors import KDTree, BallTree
+#   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html
+#   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.BallTree.html
+
+k = cKDTree(
+    data=np.array(np.where(rv_array == 1)).T,
+    leafsize=64
+)
+
+print "Tree build time: {0} seconds".format(time.time() - t_start)
+
+
+# -----------------------------------------------------------------------------
+
+
 
 t1, t1c = 0, 0
 t2, t2c = 0, 0
@@ -119,6 +137,7 @@ for r in range(nrows):
         # raise
 
 
+
 # print rv_array
 # print z
 # print rv_array.shape
@@ -128,7 +147,8 @@ for r in range(nrows):
 # print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
 
 dur = time.time() - t_start
-print "Total run time: {0} seconds".format(round(dur, 2))
+print "Distance run time: {0} seconds".format(round(dur, 2))
+
 
 # -----------------------------------------------------------------------------
 
