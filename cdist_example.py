@@ -9,9 +9,8 @@ import rasterio
 # from scipy.spatial import distance
 import distance
 
-from corrections import convert_index_to_coords, calc_haversine_distance
+from utility import rasterize, convert_index_to_coords, calc_haversine_distance
 
-from rasterize import rasterize
 
 
 # -------------------------------------
