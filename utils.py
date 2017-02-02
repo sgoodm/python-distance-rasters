@@ -12,17 +12,27 @@ import numpy as np
 def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
     """Rasterize features
 
+    Can choose to provide either pixel_size or both affine and shape
+
+    Providing output path is optional. Only needed if you want to save
+    rasterized feature(s) to a GeoTiff
+
+    rasterio features rasterization function:
+    https://mapbox.github.io/rasterio/topics/features.html
+    https://mapbox.github.io/rasterio/_modules/rasterio/features.html
+
     Args
         path (str): path to fiona compatible file containing features
         pixel_size (float): resolution at which to rasterize features
+        affine (Affine): affine transformation used for rasterization
+        shp (tuple): shape for rasterization which corresponds with affine
         output (str): (optional) output path for raster of rasterized features
+
     Returns
         array representing rasterized features
         affine of resoluting raster
-        boundary of raster
     """
     shp = fiona.open(path, "r")
-    feats = [(feat['geometry'], 1) for feat in shp]
 
     if (affine is not None and isinstance(affine, Affine)
         and shape is not None and isinstance(shape, tuple)
@@ -59,13 +69,19 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
     else:
         raise Exception('Must provide either pixel size or affine and shape')
 
+    # could use field arg + dict lookup for non-binary rasters
+    rvalue = 1
+    feats = [(feat['geometry'], rvalue) for feat in shp]
 
     rv_array = features.rasterize(
         feats,
         out_shape=shape,
         transform=affine,
         fill=0,
-        all_touched=True)
+        default_value=1,
+        all_touched=True,
+        dtype=None
+    )
 
     if output is not None:
         export_raster(rv_array, affine, output)
