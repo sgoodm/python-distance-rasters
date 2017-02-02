@@ -8,7 +8,8 @@ from utils import export_raster, convert_index_to_coords, calc_haversine_distanc
 
 
 def build_distance_array(raster_array, affine=None, output=None):
-
+    """build distance array from raster array
+    """
     if affine is not None and not isinstance(affine, Affine):
         raise Exception('If provided, affine must be an instance of Affine class')
 
@@ -24,7 +25,7 @@ def build_distance_array(raster_array, affine=None, output=None):
     # array for distance raster results
     z = np.empty(raster_array.shape, dtype=float)
 
-
+    # ----------------------------------------
 
     t_start = time.time()
 
@@ -36,6 +37,8 @@ def build_distance_array(raster_array, affine=None, output=None):
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.BallTree.html
 
+
+    # could make the condition for where be an optional input arg
     k = cKDTree(
         data=np.array(np.where(raster_array == 1)).T,
         leafsize=64
@@ -43,15 +46,16 @@ def build_distance_array(raster_array, affine=None, output=None):
 
     print "Tree build time: {0} seconds".format(time.time() - t_start)
 
+    # ----------------------------------------
 
     # t1, t1c = 0, 0
     # t2, t2c = 0, 0
 
-    print "Building distance array.."
+    print "Building distance array..."
 
-    for r in range(nrows):
+    for r in xrange(nrows):
 
-        for c in range(ncols):
+        for c in xrange(ncols):
 
             cur_index = (r, c)
             # print "Current index (r, c): {0}".format(cur_index)
@@ -113,9 +117,9 @@ def build_distance_array(raster_array, affine=None, output=None):
     # print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
     # print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
 
-    dur = time.time() - t_start
-    print "Total run time: {0} seconds".format(round(dur, 2))
+    print "Total run time: {0} seconds".format(round(time.time() - t_start, 2))
 
+    # ----------------------------------------
 
     if output is not None:
         export_raster(z, affine, output)

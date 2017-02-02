@@ -1,6 +1,7 @@
 
 
 import math
+from warnings import warn
 import fiona
 import rasterio
 from rasterio import features
@@ -8,7 +9,7 @@ from affine import Affine
 import numpy as np
 
 
-def rasterize(path, pixel_size=None, output=None):
+def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
     """Rasterize features
 
     Args
@@ -20,35 +21,43 @@ def rasterize(path, pixel_size=None, output=None):
         affine of resoluting raster
         boundary of raster
     """
+    shp = fiona.open(path, "r")
+    feats = [(feat['geometry'], 1) for feat in shp]
 
+    if (affine is not None and isinstance(affine, Affine)
+        and shape is not None and isinstance(shape, tuple)
+        and len(shape) == 2):
 
-    if pixel_size is None:
-        pixel_size = 0.01
-    else:
+        if pixel_size is not None and pixel_size != affine[2]:
+            warn('Ignoring pixel size provided due to valid affine and shape input.')
+
+        # does affine / shape need to be adjusted to match rounding
+        # done when only pixel_size is provided?
+
+    elif pixel_size is not None:
         try:
             pixel_size = float(pixel_size)
         except:
             raise Exception("Invalid pixel size (could not be converted to float)")
 
-    psi = 1 / pixel_size
+        psi = 1 / pixel_size
 
+        bnds = shp.bounds
+        xmin, ymin, xmax, ymax = bnds
 
-    shp = fiona.open(path, "r")
-    feats = [(feat['geometry'], 1) for feat in shp]
+        xmin = math.floor(xmin * psi) / psi
+        ymin = math.floor(ymin * psi) / psi
 
-    bnds = shp.bounds
-    xmin, ymin, xmax, ymax = bnds
+        xmax = math.ceil(xmax * psi) / psi + pixel_size
+        ymax = math.ceil(ymax * psi) / psi + pixel_size
 
-    xmin = math.floor(xmin * psi) / psi
-    ymin = math.floor(ymin * psi) / psi
+        shape = (int((ymax-ymin)*psi), int((xmax-xmin)*psi))
 
-    xmax = math.ceil(xmax * psi) / psi + pixel_size
-    ymax = math.ceil(ymax * psi) / psi + pixel_size
+        affine = Affine(pixel_size, 0, xmin,
+                        0, -pixel_size, ymax)
 
-    shape = (int((ymax-ymin)*psi), int((xmax-xmin)*psi))
-
-    affine = Affine(pixel_size, 0, xmin,
-                    0, -pixel_size, ymax)
+    else:
+        raise Exception('Must provide either pixel size or affine and shape')
 
 
     rv_array = features.rasterize(
@@ -58,51 +67,23 @@ def rasterize(path, pixel_size=None, output=None):
         fill=0,
         all_touched=True)
 
-
     if output is not None:
+        export_raster(rv_array, affine, output)
 
-        out_dtype = 'uint8'
-        # affine takes upper left
-        # (writing to asc directly used lower left)
-        meta = {
-            'count': 1,
-            'crs': {'init': 'epsg:4326'},
-            'dtype': out_dtype,
-            'affine': affine,
-            'driver': 'GTiff',
-            'height': shape[0],
-            'width': shape[1],
-            # 'nodata': 0,
-            # 'compress': 'lzw'
-        }
-
-        raster_out = np.array([rv_array.astype(out_dtype)])
-
-        # write geotif file
-        with rasterio.open(output, "w", **meta) as dst:
-            dst.write(raster_out)
-
-
-    # ###
     # print rv_array
 
-    # print bnds
     # print xmin, ymin, xmax, ymax
 
     # print shape
     # print affine
     # print rv_array.shape
 
-    # print meta
-    # print raster_out.shape
-    # ###
-
-
     return rv_array, affine
 
 
 def export_raster(raster, affine, path):
-
+    """Export raster array to geotiff
+    """
     out_dtype = 'float64'
     # affine takes upper left
     # (writing to asc directly used lower left)
@@ -112,13 +93,13 @@ def export_raster(raster, affine, path):
         'dtype': out_dtype,
         'affine': affine,
         'driver': 'GTiff',
-        'height': z.shape[0],
-        'width': z.shape[1],
-        'nodata': -1,
+        'height': raster.shape[0],
+        'width': raster.shape[1],
+        # 'nodata': -1,
         # 'compress': 'lzw'
     }
 
-    raster_out = np.array([z.astype(out_dtype)])
+    raster_out = np.array([raster.astype(out_dtype)])
 
     # write geotif file
     with rasterio.open(path, "w", **meta) as dst:
