@@ -19,7 +19,7 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
             path to export distance array as geotiff raster
         conditional (function): [optional]
             function which applies conditional to raster_array in order to
-            define which elements are used to calculate distance to
+            define which elements distances are calculate to
             (default function finds distance to elements with a value of 1)
 
     Returns
