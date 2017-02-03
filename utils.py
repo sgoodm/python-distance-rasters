@@ -41,8 +41,11 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
         if pixel_size is not None and pixel_size != affine[2]:
             warn('Ignoring pixel size provided due to valid affine and shape input.')
 
+        # TODO:
         # does affine / shape need to be adjusted to match rounding
         # done when only pixel_size is provided?
+        #   should assume if affine is output from an intial call to
+        #   this function that the affine is already adjusted/clean
 
     elif pixel_size is not None:
         try:
@@ -69,6 +72,7 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
     else:
         raise Exception('Must provide either pixel size or affine and shape')
 
+    # TODO:
     # could use field arg + dict lookup for non-binary rasters
     rvalue = 1
     feats = [(feat['geometry'], rvalue) for feat in shp]

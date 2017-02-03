@@ -24,7 +24,6 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
 
     Returns
         resulting distance array
-
     """
     if affine is not None and not isinstance(affine, Affine):
         raise Exception('If provided, affine must be an instance of Affine class')
@@ -33,12 +32,11 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
         raise Exception('Affine is required for output')
 
 
-    # assume raster_array and affine instance could be passed from anywhere
     pixel_size = affine[2]
     nrows, ncols = raster_array.shape
 
 
-    # array for distance raster results
+    # output array for distance raster results
     z = np.empty(raster_array.shape, dtype=float)
 
 
@@ -64,7 +62,6 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.BallTree.html
 
-    # could make the condition for where be an optional input arg
     k = cKDTree(
         data=np.array(np.where(conditional(raster_array))).T,
         leafsize=64
@@ -110,15 +107,12 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
             # t2s = time.time()
 
             if cur_index[1] == min_index[1]:
-
                 # columns are same meaning nearest is either vertical or self.
                 # no correction needed, just convert to km
-
                 dd_min_dist = min_dist * pixel_size
                 km_min_dist = dd_min_dist * 111.321
 
             else:
-
                 km_min_dist = calc_haversine_distance(
                     convert_index_to_coords(cur_index, affine),
                     convert_index_to_coords(min_index, affine)
