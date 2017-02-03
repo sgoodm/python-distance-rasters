@@ -7,8 +7,24 @@ from scipy.spatial import cKDTree
 from utils import export_raster, convert_index_to_coords, calc_haversine_distance
 
 
-def build_distance_array(raster_array, affine=None, output=None):
+def build_distance_array(raster_array, affine=None, output=None, conditional=None):
     """build distance array from raster array
+
+    Args
+        raster_array (np array):
+            array to use for distance calculations
+        affine (Affine): [optional]
+            affine transformation defining spatial raster data
+        output (str): [optional, requires affine arg]
+            path to export distance array as geotiff raster
+        conditional (function): [optional]
+            function which applies conditional to raster_array in order to
+            define which elements are used to calculate distance to
+            (default function finds distance to elements with a value of 1)
+
+    Returns
+        resulting distance array
+
     """
     if affine is not None and not isinstance(affine, Affine):
         raise Exception('If provided, affine must be an instance of Affine class')
@@ -25,6 +41,17 @@ def build_distance_array(raster_array, affine=None, output=None):
     # array for distance raster results
     z = np.empty(raster_array.shape, dtype=float)
 
+
+    def default_conditional(rarray):
+        return (rarray == 1)
+
+    if conditional is None:
+        conditional = default_conditional
+
+    elif not callable(conditional):
+        raise Exception('Conditional must be function')
+
+
     # ----------------------------------------
 
     t_start = time.time()
@@ -37,10 +64,9 @@ def build_distance_array(raster_array, affine=None, output=None):
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.BallTree.html
 
-
     # could make the condition for where be an optional input arg
     k = cKDTree(
-        data=np.array(np.where(raster_array == 1)).T,
+        data=np.array(np.where(conditional(raster_array))).T,
         leafsize=64
     )
 
