@@ -31,10 +31,11 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
     if affine is None and output is not None:
         raise Exception('Affine is required for output')
 
+    if affine is not None:
+        pixel_size = affine[0]
 
-    pixel_size = affine[2]
+
     nrows, ncols = raster_array.shape
-
 
     # output array for distance raster results
     z = np.empty(raster_array.shape, dtype=float)
@@ -106,23 +107,29 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
 
             # t2s = time.time()
 
-            if cur_index[1] == min_index[1]:
-                # columns are same meaning nearest is either vertical or self.
-                # no correction needed, just convert to km
-                dd_min_dist = min_dist * pixel_size
-                km_min_dist = dd_min_dist * 111.321
+            if affine is not None:
+                if cur_index[1] == min_index[1]:
+                    # columns are same meaning nearest is either vertical or self.
+                    # no correction needed, just convert to km
+                    dd_min_dist = min_dist * pixel_size
+                    km_min_dist = dd_min_dist * 111.321
+
+                else:
+                    km_min_dist = calc_haversine_distance(
+                        convert_index_to_coords(cur_index, affine),
+                        convert_index_to_coords(min_index, affine)
+                    )
+
+                val = km_min_dist * 1000
 
             else:
-                km_min_dist = calc_haversine_distance(
-                    convert_index_to_coords(cur_index, affine),
-                    convert_index_to_coords(min_index, affine)
-                )
+                val = min_dist
 
 
             # t2 += time.time() - t2s
             # t2c += 1
 
-            z[r][c] = km_min_dist * 1000
+            z[r][c] = val
 
             # print "\tMin dist (m): {0}".format(km_min_dist * 1000)
             # raise

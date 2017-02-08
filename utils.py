@@ -38,7 +38,7 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
         and shape is not None and isinstance(shape, tuple)
         and len(shape) == 2):
 
-        if pixel_size is not None and pixel_size != affine[2]:
+        if pixel_size is not None and pixel_size != affine[0]:
             warn('Ignoring pixel size provided due to valid affine and shape input.')
 
         # TODO:
@@ -134,6 +134,13 @@ def convert_index_to_coords(index, affine):
     on coordinates represented by top and left of
     matrix as well as pixel size represented by
     each element
+
+    same as using affine to transform col,row to x,y
+    but this takes significantly less time
+        e.g., (lon, lat) = (col,row) * affine
+    this also adjusts by half pixel size value to
+    use centroid of cells (not a big deal, but can
+    change haversine distances slightly)
 
     returns centroids of pixels for accurate distance
     calculations using results
