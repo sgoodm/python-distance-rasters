@@ -5,7 +5,6 @@ import math
 from warnings import warn
 import fiona
 import rasterio
-from rasterio import features
 from affine import Affine
 import numpy as np
 
@@ -23,10 +22,8 @@ def get_affine_and_shape(bounds, pixel_size):
 
     xmin = math.floor(xmin * psi) / psi
     ymin = math.floor(ymin * psi) / psi
-
     xmax = math.ceil(xmax * psi) / psi
     ymax = math.ceil(ymax * psi) / psi
-
     # print xmin, ymin, xmax, ymax
 
     shape = (int((ymax-ymin)*psi), int((xmax-xmin)*psi))
@@ -95,7 +92,7 @@ def rasterize(path, output=None,
     rvalue = 1
     feats = [(feat['geometry'], rvalue) for feat in shp]
 
-    rv_array = features.rasterize(
+    rv_array = rasterio.features.rasterize(
         feats,
         out_shape=shape,
         transform=affine,
