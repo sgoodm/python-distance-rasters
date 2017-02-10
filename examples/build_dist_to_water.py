@@ -13,7 +13,7 @@ from utils import rasterize, export_raster
 from affine import Affine
 # import numpy as np
 
-shorelines_path = "/sciclone/aiddata10/REU/raw/shorelines/GSHHS_f_L1_lines.shp"
+shorelines_path = "/sciclone/aiddata10/REU/raw/shorelines/GSHHS_f_L1/GSHHS_f_L1_lines.shp"
 
 lakes_path = "/sciclone/aiddata10/REU/raw/natural_earth/ne_10m_lakes/ne_10m_lakes.shp"
 
