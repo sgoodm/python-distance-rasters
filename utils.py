@@ -10,10 +10,44 @@ from affine import Affine
 import numpy as np
 
 
-def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
+def get_affine_and_shape(bounds, pixel_size):
+
+    try:
+        pixel_size = float(pixel_size)
+    except:
+        raise Exception("Invalid pixel size (could not be converted to float)")
+
+    psi = 1 / pixel_size
+
+    xmin, ymin, xmax, ymax = bounds
+
+    xmin = math.floor(xmin * psi) / psi
+    ymin = math.floor(ymin * psi) / psi
+
+    xmax = math.ceil(xmax * psi) / psi
+    ymax = math.ceil(ymax * psi) / psi
+
+    # print xmin, ymin, xmax, ymax
+
+    shape = (int((ymax-ymin)*psi), int((xmax-xmin)*psi))
+
+    affine = Affine(pixel_size, 0, xmin,
+                    0, -pixel_size, ymax)
+
+    return affine, shape
+
+
+def rasterize(path, output=None,
+              pixel_size=None, bounds=None,
+              affine=None, shape=None):
     """Rasterize features
 
-    Can choose to provide either pixel_size or both affine and shape
+    Options for definining the boundary and pixel size of rasterization:
+
+    User may provide
+        1) pixel_size only - uses full boundary of features
+        2) pixel size and bounds - limits features to given boundary
+        3) affine and shape - both required to determine boundary
 
     Providing output path is optional. Only needed if you want to save
     rasterized feature(s) to a GeoTiff
@@ -24,10 +58,11 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
 
     Args
         path (str): path to fiona compatible file containing features
-        pixel_size (float): resolution at which to rasterize features
-        affine (Affine): affine transformation used for rasterization
-        shp (tuple): shape for rasterization which corresponds with affine
         output (str): (optional) output path for raster of rasterized features
+        pixel_size (float): resolution at which to rasterize features
+        bounds (tuple): boundary tuple (xmin, ymin, xmax, ymax)
+        affine (Affine): affine transformation used for rasterization
+        shp (tuple): shape for rasterization which corresponds with affine (nrows, ncols)
 
     Returns
         array representing rasterized features
@@ -40,38 +75,20 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
         and len(shape) == 2):
 
         if pixel_size is not None and pixel_size != affine[0]:
-            warn('Ignoring pixel size provided due to valid affine and shape input.')
+            warn('Ignoring `pixel_size` provided due to valid affine and shape input.')
 
-        # TODO:
-        # does affine / shape need to be adjusted to match rounding
-        # done when only pixel_size is provided?
-        #   should assume if affine is output from an intial call to
-        #   this function that the affine is already adjusted/clean
+        if pixel_size is not None and bounds is not None:
+            alt_affine, alt_shape = get_affine_and_shape(bounds=bounds, pixel_size=pixel_size)
+
+            if alt_affine != affine or alt_shape != shape:
+                warn("Ignoring `bounds` due to valid affine and shape input")
 
     elif pixel_size is not None:
-        try:
-            pixel_size = float(pixel_size)
-        except:
-            raise Exception("Invalid pixel size (could not be converted to float)")
-
-        psi = 1 / pixel_size
-
-        bnds = shp.bounds
-        xmin, ymin, xmax, ymax = bnds
-
-        xmin = math.floor(xmin * psi) / psi
-        ymin = math.floor(ymin * psi) / psi
-
-        xmax = math.ceil(xmax * psi) / psi + pixel_size
-        ymax = math.ceil(ymax * psi) / psi + pixel_size
-
-        shape = (int((ymax-ymin)*psi), int((xmax-xmin)*psi))
-
-        affine = Affine(pixel_size, 0, xmin,
-                        0, -pixel_size, ymax)
+        bnds = shp.bounds if bounds is None else bounds
+        affine, shape = get_affine_and_shape(bounds=bnds, pixel_size=pixel_size)
 
     else:
-        raise Exception('Must provide either pixel size or affine and shape')
+        raise Exception('Must provide either pixel_size or pixel_size and bounds or affine and shape')
 
     # TODO:
     # could use field arg + dict lookup for non-binary rasters
@@ -92,12 +109,9 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
         export_raster(rv_array, affine, output)
 
     # print rv_array
-
-    # print xmin, ymin, xmax, ymax
-
+    # print rv_array.shape
     # print shape
     # print affine
-    # print rv_array.shape
 
     return rv_array, affine
 
@@ -110,11 +124,12 @@ def make_dir(path):
 
     Raise error if error other than directory exists occurs.
     """
-    try:
-        os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
+    if path != '':
+        try:
+            os.makedirs(path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
 
 
 def export_raster(raster, affine, path):
