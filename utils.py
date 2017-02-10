@@ -101,6 +101,21 @@ def rasterize(path, pixel_size=None, affine=None, shape=None, output=None):
     return rv_array, affine
 
 
+def make_dir(path):
+    """Make directory.
+
+    Args:
+        path (str): absolute path for directory
+
+    Raise error if error other than directory exists occurs.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
+
 def export_raster(raster, affine, path):
     """Export raster array to geotiff
     """
@@ -120,6 +135,8 @@ def export_raster(raster, affine, path):
     }
 
     raster_out = np.array([raster.astype(out_dtype)])
+
+    make_dir(os.path.dirname(path))
 
     # write geotif file
     with rasterio.open(path, "w", **meta) as dst:
