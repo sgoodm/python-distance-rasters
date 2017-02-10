@@ -5,6 +5,7 @@ import math
 from warnings import warn
 import fiona
 import rasterio
+from rasterio import features
 from affine import Affine
 import numpy as np
 
@@ -92,7 +93,7 @@ def rasterize(path, output=None,
     rvalue = 1
     feats = [(feat['geometry'], rvalue) for feat in shp]
 
-    rv_array = rasterio.features.rasterize(
+    rv_array = features.rasterize(
         feats,
         out_shape=shape,
         transform=affine,
