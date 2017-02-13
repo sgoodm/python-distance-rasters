@@ -11,9 +11,11 @@ from utils import rasterize, export_raster
 # -----------------------------------------------------------------------------
 
 from affine import Affine
-# import numpy as np
+import numpy as np
 
-shorelines_path = "/sciclone/aiddata10/REU/raw/shorelines/GSHHS_f_L1/GSHHS_f_L1_lines.shp"
+# shorelines_path = "/sciclone/aiddata10/REU/raw/shorelines/GSHHS_f_L1/GSHHS_f_L1_lines.shp"
+# convert lines to polygons using QGIS or any other method (very quick in QGIS on normal desktop)
+shorelines_path = "/sciclone/aiddata10/REU/raw/shorelines/GSHHS_f_L1/GSHHS_f_L1_polygons.shp"
 
 lakes_path = "/sciclone/aiddata10/REU/raw/natural_earth/ne_10m_lakes/ne_10m_lakes.shp"
 
@@ -33,6 +35,8 @@ affine = Affine(pixel_size, 0, xmin,
 shape = (int((ymax-ymin)/pixel_size), int((xmax-xmin)/pixel_size))
 
 shorelines, _ = rasterize(path=shorelines_path, affine=affine, shape=shape)
+shorelines = np.logical_not(shorelines).astype(int)
+
 lakes, _ = rasterize(path=lakes_path, affine=affine, shape=shape)
 rivers, _ = rasterize(path=rivers_path, affine=affine, shape=shape)
 
