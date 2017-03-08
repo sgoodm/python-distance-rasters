@@ -1,7 +1,9 @@
 
 import sys
 import os
-base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+base = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src')
 sys.path.append(base)
 
 
@@ -10,8 +12,6 @@ import math
 
 import rasterio
 
-# from scipy import spatial
-# from scipy.spatial import distance
 import distance
 
 from utility import rasterize, convert_index_to_coords, calc_haversine_distance
@@ -20,22 +20,13 @@ from utility import rasterize, convert_index_to_coords, calc_haversine_distance
 
 # -------------------------------------
 
-# shp_path = "data/line_test/line_test.shp"
-# out_name = "line_test"
-
-# shp_path = "data/line_test/big_line.shp"
-# out_name = "big_line"
-
-# shp_path = "data/ca_riv_30s/ca_riv_30s.shp"
-# out_name = "ca_riv_30s_sub1"
-
-shp_path = "{0}/data/ca_riv_15s/ca_riv_15s.shp".format(base)
-out_name = "ca_riv_15s"
+shp_path = "{0}/data/line_test.shp".format(base)
+out_name = "line_test"
 
 # -------------------------------------
 
-rasterized_feature_output_path = "{0}/data/{1}_binary_raster.tif".format(base, out_name)
-output_raster_path = "{0}/data/{1}_distance_raster.tif".format(base, out_name)
+rasterized_feature_output_path = "{0}/data/{1}_binary.tif".format(base, out_name)
+output_raster_path = "{0}/data/{1}_distance.tif".format(base, out_name)
 
 
 
