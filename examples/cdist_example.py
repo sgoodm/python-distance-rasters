@@ -1,20 +1,16 @@
 
-import sys
-import os
 
-base = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src')
-sys.path.append(base)
+import os
+base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from distancerasters import build_distance_array, rasterize, export_raster
+
+from distancerasters import distance
+from distancerasters.utils import convert_index_to_coords, calc_haversine_distance
 
 
 import numpy as np
 import math
-
-import rasterio
-
-import distance
-
-from utility import rasterize, convert_index_to_coords, calc_haversine_distance
 
 
 
@@ -39,8 +35,8 @@ output_raster_path = "{0}/data/{1}_distance.tif".format(base, out_name)
 pixel_size = 0.01
 
 
-rv_array, affine, bnds = rasterize(path=shp_path, pixel_size=pixel_size,
-                                   output=rasterized_feature_output_path)
+rv_array, affine = rasterize(path=shp_path, pixel_size=pixel_size,
+                             output=rasterized_feature_output_path)
 # rv_array = fake_rasterize()
 
 
@@ -55,7 +51,7 @@ nrows, ncols = rv_array.shape
 print rv_array.shape
 print nrows * ncols
 
-raise
+# raise
 
 z = np.empty(rv_array.shape, dtype=float)
 
@@ -242,26 +238,5 @@ dur = time.time() - t_start
 print "Run time: {0} seconds".format(round(dur, 2))
 
 
-# raise
 
-
-out_dtype = 'float64'
-# affine takes upper left
-# (writing to asc directly used lower left)
-meta = {
-    'count': 1,
-    'crs': {'init': 'epsg:4326'},
-    'dtype': out_dtype,
-    'affine': affine,
-    'driver': 'GTiff',
-    'height': nrows,
-    'width': ncols,
-    'nodata': -1,
-    # 'compress': 'lzw'
-}
-
-raster_out = np.array([z.astype(out_dtype)])
-
-# write geotif file
-with rasterio.open(output_raster_path, "w", **meta) as dst:
-    dst.write(raster_out)
+export_raster(z, affine, output_raster_path)

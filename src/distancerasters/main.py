@@ -1,10 +1,10 @@
 
-
+from __future__ import absolute_import
 import time
 import numpy as np
 from affine import Affine
 from scipy.spatial import cKDTree
-from utils import export_raster, convert_index_to_coords, calc_haversine_distance
+from .utils import export_raster, convert_index_to_coords, calc_haversine_distance
 
 
 def build_distance_array(raster_array, affine=None, output=None, conditional=None):
