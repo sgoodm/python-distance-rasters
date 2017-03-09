@@ -1,0 +1,5 @@
+numpy>=1.9
+rasterio>=0.27
+fiona
+affine
+scipy

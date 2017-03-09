@@ -1,3 +1,7 @@
 *.pyc
 *.tif.aux.xml
 *.tif
+build/*
+dist/*
+.DS_Store
+MANIFEST
