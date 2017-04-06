@@ -7,6 +7,7 @@ import fiona
 import rasterio
 from rasterio import features
 from affine import Affine
+from rasterstats.io import read_features
 import numpy as np
 
 
@@ -35,7 +36,7 @@ def get_affine_and_shape(bounds, pixel_size):
     return affine, shape
 
 
-def rasterize(path, output=None,
+def rasterize(vectors, output=None,
               pixel_size=None, bounds=None,
               affine=None, shape=None):
     """Rasterize features
@@ -55,7 +56,7 @@ def rasterize(path, output=None,
     https://mapbox.github.io/rasterio/_modules/rasterio/features.html
 
     Args
-        path (str): path to fiona compatible file containing features
+        vectors: features input, see rasterstats for acceptable inputs
         output (str): (optional) output path for raster of rasterized features
         pixel_size (float): resolution at which to rasterize features
         bounds (tuple): boundary tuple (xmin, ymin, xmax, ymax)
@@ -66,8 +67,6 @@ def rasterize(path, output=None,
         array representing rasterized features
         affine of resoluting raster
     """
-    shp = fiona.open(path, "r")
-
     if (affine is not None and isinstance(affine, Affine)
         and shape is not None and isinstance(shape, tuple)
         and len(shape) == 2):
@@ -81,17 +80,18 @@ def rasterize(path, output=None,
             if alt_affine != affine or alt_shape != shape:
                 warn("Ignoring `bounds` due to valid affine and shape input")
 
-    elif pixel_size is not None:
-        bnds = shp.bounds if bounds is None else bounds
-        affine, shape = get_affine_and_shape(bounds=bnds, pixel_size=pixel_size)
+    elif pixel_size is not None and bounds is not None:
+        affine, shape = get_affine_and_shape(bounds=bounds, pixel_size=pixel_size)
 
     else:
-        raise Exception('Must provide either pixel_size or pixel_size and bounds or affine and shape')
+        raise Exception('Must provide either pixel_size and bounds or affine and shape')
+
+    features_iter = read_features(vectors)
 
     # TODO:
     # could use field arg + dict lookup for non-binary rasters
     rvalue = 1
-    feats = [(feat['geometry'], rvalue) for feat in shp]
+    feats = [(feat['geometry'], rvalue) for feat in features_iter]
 
     rv_array = features.rasterize(
         feats,
