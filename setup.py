@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='distancerasters',
     packages=['distancerasters'],
-    version='0.2.0a1',
+    version='0.2.0a2',
     description='Generate distance raster using arbitrary sets of spatial features',
     author='Seth Goodman',
     author_email='sgoodman@aiddata.wm.edu',

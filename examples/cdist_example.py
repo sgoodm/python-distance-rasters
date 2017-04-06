@@ -9,6 +9,7 @@ from distancerasters import distance
 from distancerasters.utils import convert_index_to_coords, calc_haversine_distance
 
 
+import fiona
 import numpy as np
 import math
 
@@ -34,8 +35,9 @@ output_raster_path = "{0}/data/{1}_distance.tif".format(base, out_name)
 # testing with 0.01 for now
 pixel_size = 0.01
 
+shp = fiona.open(shp_path, "r")
 
-rv_array, affine = rasterize(path=shp_path, pixel_size=pixel_size,
+rv_array, affine = rasterize(shp, pixel_size=pixel_size, bounds=shp.bounds,
                              output=rasterized_feature_output_path)
 # rv_array = fake_rasterize()
 

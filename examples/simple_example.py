@@ -2,7 +2,9 @@
 import os
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+import fiona
 from distancerasters import build_distance_array, rasterize, export_raster
+
 
 # -----------------------------------------------------------------------------
 
@@ -18,8 +20,8 @@ pixel_size = 0.01
 
 rasterized_features_path = "{0}/data/{1}_binary.tif".format(base, out_name)
 
-
-rv_array, affine = rasterize(path=shp_path, pixel_size=pixel_size,
+shp = fiona.open(shp_path, "r")
+rv_array, affine = rasterize(shp, pixel_size=pixel_size, bounds=shp.bounds,
                              output=rasterized_features_path)
 
 # export_raster(rv_array, affine, rasterized_features_path)
