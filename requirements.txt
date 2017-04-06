@@ -3,3 +3,4 @@ rasterio>=0.27
 fiona
 affine
 scipy
+rasterstats
