@@ -38,7 +38,8 @@ def get_affine_and_shape(bounds, pixel_size):
 
 def rasterize(vectors, output=None,
               pixel_size=None, bounds=None,
-              affine=None, shape=None):
+              affine=None, shape=None,
+              attribute=None, fill=0, default_value=1):
     """Rasterize features
 
     Options for definining the boundary and pixel size of rasterization:
@@ -61,7 +62,10 @@ def rasterize(vectors, output=None,
         pixel_size (float): resolution at which to rasterize features
         bounds (tuple): boundary tuple (xmin, ymin, xmax, ymax)
         affine (Affine): affine transformation used for rasterization
-        shp (tuple): shape for rasterization which corresponds with affine (nrows, ncols)
+        shape (tuple): shape for rasterization which corresponds with affine (nrows, ncols)
+        attribute (str): field to use for assigning cell values instead of `default_value`
+        fill (int, float): same as rasterio's features.rasterize `fill`
+        default_value (int, float): same as rasterio's features.rasterize `default_value`
 
     Returns
         array representing rasterized features
@@ -88,17 +92,23 @@ def rasterize(vectors, output=None,
 
     features_iter = read_features(vectors)
 
+
+    if attribute is None:
+        feats = [(feat['geometry'], default_value) for feat in features_iter]
+    else:
+        feats = [(feat['geometry'], feat[str(attribute)]) for feat in features_iter]
+
     # TODO:
-    # could use field arg + dict lookup for non-binary rasters
-    rvalue = 1
-    feats = [(feat['geometry'], rvalue) for feat in features_iter]
+    # could also use lookup dict with attribute arg for non-binary rasters
+    # where attribute value is not numeric
+
 
     rv_array = features.rasterize(
         feats,
         out_shape=shape,
         transform=affine,
-        fill=0,
-        default_value=1,
+        fill=fill,
+        default_value=default_value,
         all_touched=True,
         dtype=None
     )
@@ -130,10 +140,9 @@ def make_dir(path):
                 raise
 
 
-def export_raster(raster, affine, path):
+def export_raster(raster, affine, path, out_dtype='float64'):
     """Export raster array to geotiff
     """
-    out_dtype = 'float64'
     # affine takes upper left
     # (writing to asc directly used lower left)
     meta = {
