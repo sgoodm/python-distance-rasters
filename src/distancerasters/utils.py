@@ -69,7 +69,7 @@ def rasterize(vectors, layer=0, output=None,
             features input, see rasterstats for acceptable inputs
         layer: int or string, optional
             If `vectors` is a path to an fiona source,
-            specify the vector layer to use either by name or number.
+            specify the vectors layer to use either by name or number.
             defaults to 0
         output (str): (optional)
             output path for raster of rasterized features
@@ -117,24 +117,24 @@ def rasterize(vectors, layer=0, output=None,
         features_iter = read_features(vectors, layer)
         feats = [(feat['geometry'], default_value) for feat in features_iter]
     else:
-        if type(vector).__name__ == 'GeoDataFrame':
-            feats = [(feat['geometry'], feat[str(attribute)]) for _, feat in vector.iterrows()]
+        if type(vectors).__name__ == 'GeoDataFrame':
+            feats = [(feat['geometry'], feat[str(attribute)]) for _, feat in vectors.iterrows()]
 
-        elif isinstance(vector, string_types):
+        elif isinstance(vectors, string_types):
 
             try:
                 # test it as fiona data source
-                with fiona.open(vector, 'r', layer=layer) as src:
+                with fiona.open(vectors, 'r', layer=layer) as src:
                     assert len(src) > 0
 
-                feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in fiona.open(vector, 'r', layer=layer)]
+                feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in fiona.open(vectors, 'r', layer=layer)]
 
             except (AssertionError, TypeError, IOError, OSError):
                 raise Exception("Cannot open file path provided using Fiona")
 
         elif isinstance(obj, Iterable):
 
-            feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in vector]
+            feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in vectors]
 
         else:
             raise TypeError(
