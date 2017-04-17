@@ -44,7 +44,8 @@ def get_affine_and_shape(bounds, pixel_size):
     return affine, shape
 
 
-def rasterize(vectors, layer=0, output=None,
+def rasterize(vectors, layer=0,
+              output=None, nodata=None,
               pixel_size=None, bounds=None,
               affine=None, shape=None,
               attribute=None, fill=0, default_value=1):
@@ -73,6 +74,8 @@ def rasterize(vectors, layer=0, output=None,
             defaults to 0
         output (str): (optional)
             output path for raster of rasterized features
+        nodata: (optional)
+            nodata value used if output argument is provided
         pixel_size (float):
             resolution at which to rasterize features
         bounds (tuple):
@@ -158,7 +161,7 @@ def rasterize(vectors, layer=0, output=None,
     )
 
     if output is not None:
-        export_raster(rv_array, affine, output)
+        export_raster(rv_array, affine, output, nodata=nodata)
 
     # print rv_array
     # print rv_array.shape
@@ -184,7 +187,7 @@ def make_dir(path):
                 raise
 
 
-def export_raster(raster, affine, path, out_dtype='float64'):
+def export_raster(raster, affine, path, out_dtype='float64', nodata=None):
     """Export raster array to geotiff
     """
     # affine takes upper left
@@ -200,6 +203,9 @@ def export_raster(raster, affine, path, out_dtype='float64'):
         # 'nodata': -1,
         # 'compress': 'lzw'
     }
+
+    if nodata is not None:
+        meta['nodata'] = nodata
 
     raster_out = np.array([raster.astype(out_dtype)])
 
