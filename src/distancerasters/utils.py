@@ -1,4 +1,5 @@
 
+import sys
 import os
 import errno
 import math
@@ -9,6 +10,13 @@ from rasterio import features
 from affine import Affine
 from rasterstats.io import read_features
 import numpy as np
+
+
+PY3 = sys.version_info[0] >= 3
+if PY3:
+    string_types = str,  # pragma: no cover
+else:
+    string_types = basestring,  # pragma: no cover
 
 
 def get_affine_and_shape(bounds, pixel_size):
@@ -36,7 +44,7 @@ def get_affine_and_shape(bounds, pixel_size):
     return affine, shape
 
 
-def rasterize(vectors, output=None,
+def rasterize(vectors, layer=0, output=None,
               pixel_size=None, bounds=None,
               affine=None, shape=None,
               attribute=None, fill=0, default_value=1):
@@ -57,15 +65,28 @@ def rasterize(vectors, output=None,
     https://mapbox.github.io/rasterio/_modules/rasterio/features.html
 
     Args
-        vectors: features input, see rasterstats for acceptable inputs
-        output (str): (optional) output path for raster of rasterized features
-        pixel_size (float): resolution at which to rasterize features
-        bounds (tuple): boundary tuple (xmin, ymin, xmax, ymax)
-        affine (Affine): affine transformation used for rasterization
-        shape (tuple): shape for rasterization which corresponds with affine (nrows, ncols)
-        attribute (str): field to use for assigning cell values instead of `default_value`
-        fill (int, float): same as rasterio's features.rasterize `fill`
-        default_value (int, float): same as rasterio's features.rasterize `default_value`
+        vectors:
+            features input, see rasterstats for acceptable inputs
+        layer: int or string, optional
+            If `vectors` is a path to an fiona source,
+            specify the vector layer to use either by name or number.
+            defaults to 0
+        output (str): (optional)
+            output path for raster of rasterized features
+        pixel_size (float):
+            resolution at which to rasterize features
+        bounds (tuple):
+            boundary tuple (xmin, ymin, xmax, ymax)
+        affine (Affine):
+            affine transformation used for rasterization
+        shape (tuple):
+            shape for rasterization which corresponds with affine (nrows, ncols)
+        attribute (str):
+            field to use for assigning cell values instead of `default_value`
+        fill (int, float):
+            same as rasterio's features.rasterize `fill`
+        default_value (int, float):
+            same as rasterio's features.rasterize `default_value`
 
     Returns
         array representing rasterized features
@@ -90,13 +111,36 @@ def rasterize(vectors, output=None,
     else:
         raise Exception('Must provide either pixel_size and bounds or affine and shape')
 
-    features_iter = read_features(vectors)
 
 
     if attribute is None:
+        features_iter = read_features(vectors, layer)
         feats = [(feat['geometry'], default_value) for feat in features_iter]
     else:
-        feats = [(feat['geometry'], feat[str(attribute)]) for feat in features_iter]
+        if type(vector).__name__ == 'GeoDataFrame':
+            feats = [(feat['geometry'], feat[str(attribute)]) for _, feat in vector.iterrows()]
+
+        elif isinstance(vector, string_types):
+
+            try:
+                # test it as fiona data source
+                with fiona.open(vector, 'r', layer=layer) as src:
+                    assert len(src) > 0
+
+                feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in fiona.open(vector, 'r', layer=layer)]
+
+            except (AssertionError, TypeError, IOError, OSError):
+                raise Exception("Cannot open file path provided using Fiona")
+
+        elif isinstance(obj, Iterable):
+
+            feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in vector]
+
+        else:
+            raise TypeError(
+                "Attribute option currently only supports GeoPandas "
+                "GeoDataFrames or paths to files which can be opened "
+                "by Fiona")
 
     # TODO:
     # could also use lookup dict with attribute arg for non-binary rasters
