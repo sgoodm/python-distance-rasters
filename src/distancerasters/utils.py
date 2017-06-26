@@ -118,7 +118,7 @@ def rasterize(vectors, layer=0,
 
     if attribute is None:
         features_iter = read_features(vectors, layer)
-        feats = [(feat['geometry'], default_value) for feat in features_iter]
+        feats = [(feat['geometry'], default_value) for feat in features_iter if feat['geometry'] is not None]
     else:
         if type(vectors).__name__ == 'GeoDataFrame':
             feats = [(feat['geometry'], feat[str(attribute)]) for _, feat in vectors.iterrows()]
