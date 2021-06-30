@@ -63,32 +63,34 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html
     #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.BallTree.html
 
+    # As of SciPy v1.6.0, cKDTree is identical to KDTree, and the name is only kept for
+    # backward compatibility. Once we are certain this library will not be running on
+    # SciPy <1.6.0, this function call can be changed to KDTree()
     k = cKDTree(
         data=np.array(np.where(conditional(raster_array))).T,
         leafsize=64
     )
 
-    print "Tree build time: {0} seconds".format(time.time() - t_start)
+    print ("Tree build time: {0} seconds".format(time.time() - t_start))
 
     # ----------------------------------------
 
     # t1, t1c = 0, 0
     # t2, t2c = 0, 0
 
-    print "Building distance array..."
+    print ("Building distance array...")
 
-    for r in xrange(nrows):
+    for r in range(nrows):
 
-        for c in xrange(ncols):
+        for c in range(ncols):
 
             cur_index = (r, c)
-            # print "Current index (r, c): {0}".format(cur_index)
-            # print "Current coords (lon, lat): {0}".format(
-                # convert_index_to_coords(cur_index, affine))
+            # print ("Current index (r, c): {0}".format(cur_index))
+            # print ("Current coords (lon, lat): {0}".format(
+                # convert_index_to_coords(cur_index, affine)))
 
 
             # t1s = time.time()
-
             min_dist, min_index = k.query([cur_index])
 
             min_dist = min_dist[0]
@@ -98,11 +100,11 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
             # t1c += 1
 
 
-            # print "\tmin_dist: {0}".format(min_dist)
-            # print "\tmin_index: {0}".format(min_index)
+            # print ("\tmin_dist: {0}".format(min_dist))
+            # print ("\tmin_index: {0}".format(min_index))
 
-            # print "\tMin coords (lon, lat): {0}".format(
-            #     convert_index_to_coords(min_index, affine))
+            # print ("\tMin coords (lon, lat): {0}".format(
+            #     convert_index_to_coords(min_index, affine)))
 
 
             # t2s = time.time()
@@ -131,20 +133,20 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
 
             z[r][c] = val
 
-            # print "\tMin dist (m): {0}".format(km_min_dist * 1000)
+            # print ("\tMin dist (m): {0}".format(km_min_dist * 1000))
             # raise
 
 
 
-    # print raster_array
-    # print z
-    # print raster_array.shape
-    # print nrows * ncols
+    # print (raster_array)
+    # print (z)
+    # print (raster_array.shape)
+    # print (nrows * ncols)
 
-    # print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
-    # print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
+    # print ("t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c))
+    # print ("t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c))
 
-    print "Total run time: {0} seconds".format(round(time.time() - t_start, 2))
+    print ("Total run time: {0} seconds".format(round(time.time() - t_start, 2)))
 
     # ----------------------------------------
 

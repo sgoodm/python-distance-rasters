@@ -62,8 +62,8 @@ def rasterize(vectors, layer=0,
     rasterized feature(s) to a GeoTiff
 
     rasterio features rasterization function:
-    https://mapbox.github.io/rasterio/topics/features.html
-    https://mapbox.github.io/rasterio/_modules/rasterio/features.html
+    https://rasterio.readthedocs.io/en/latest/topics/features.html
+    https://rasterio.readthedocs.io/en/latest/api/rasterio.features.html
 
     Args
         vectors:

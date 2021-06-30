@@ -27,9 +27,9 @@ rv_array, affine = rasterize(shp, pixel_size=pixel_size, bounds=shp.bounds,
 # export_raster(rv_array, affine, rasterized_features_path)
 
 
-# print rv_array
-print rv_array.shape
-print affine
+print (rv_array)
+print (rv_array.shape)
+print (affine)
 
 # -----------------------------------------------------------------------------
 
