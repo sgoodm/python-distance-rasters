@@ -25,6 +25,9 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
     Returns
         resulting distance array
     """
+    if not isinstance(raster_array, np.ndarray):
+        raise TypeError("Raster array must be a numpy array")
+
     if affine is not None and not isinstance(affine, Affine):
         raise Exception('If provided, affine must be an instance of Affine class')
 
