@@ -52,14 +52,18 @@ jobs:
       run: |
         python -m build --sdist --wheel --outdir dist/ .
     - name: Publish to Test PyPI 📦
-      if: (env.VERSION_BUMPED && contains(env.VERSION, 'a'))
+      if: |
+        env.VERSION_BUMPED == true &&
+        contains(env.VERSION, 'a')
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
     - name: Publish to PyPI 📦
-      if: (env.VERSION_BUMPED && !contains(env.VERSION, 'a'))
+      if: |
+        env.VERSION_BUMPED == true &&
+        !contains(env.VERSION, 'a')
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
