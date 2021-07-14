@@ -27,6 +27,8 @@ def test_build_distance_array(example_raster_array):
 
     assert built_array[1][3] == math.sqrt(2)
 
+    assert built_array[0][3] == math.sqrt(5)
+
 def test_bad_build_distance_array(example_raster_array):
     # Pass build_distance_array a 2D list
     with pytest.raises(TypeError):

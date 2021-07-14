@@ -11,13 +11,7 @@ from affine import Affine
 from rasterstats.io import read_features
 import numpy as np
 
-
-PY3 = sys.version_info[0] >= 3
-if PY3:
-    string_types = str,  # pragma: no cover
-else:
-    string_types = basestring,  # pragma: no cover
-
+# TODO: test this one too. create a test input/output to compare future iterations against
 
 def get_affine_and_shape(bounds, pixel_size):
 
@@ -43,6 +37,10 @@ def get_affine_and_shape(bounds, pixel_size):
 
     return affine, shape
 
+# Manually generate a tiny line (vertical, or diagonal) using WKT.
+# 5 x 5 pixel grid
+# Have a hardcoded binary of what that raster should look like
+# Check fill, default_value, nodata values and check the expected output
 
 def rasterize(vectors, layer=0,
               output=None, nodata=None,
@@ -123,7 +121,7 @@ def rasterize(vectors, layer=0,
         if type(vectors).__name__ == 'GeoDataFrame':
             feats = [(feat['geometry'], feat[str(attribute)]) for _, feat in vectors.iterrows()]
 
-        elif isinstance(vectors, string_types):
+        elif isinstance(vectors, str):
 
             try:
                 # test it as fiona data source
@@ -170,6 +168,7 @@ def rasterize(vectors, layer=0,
 
     return rv_array, affine
 
+# TODO: rip this function out
 
 def make_dir(path):
     """Make directory.
@@ -185,7 +184,6 @@ def make_dir(path):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
-
 
 def export_raster(raster, affine, path, out_dtype='float64', nodata=None):
     """Export raster array to geotiff
