@@ -1,4 +1,3 @@
-
 import sys
 import os
 import errno
@@ -18,7 +17,7 @@ def get_affine_and_shape(bounds, pixel_size):
     try:
         pixel_size = float(pixel_size)
     except:
-        raise Exception("Invalid pixel size (could not be converted to float)")
+        raise TypeError("Invalid pixel size (could not be converted to float)")
 
     psi = 1 / pixel_size
 
@@ -168,14 +167,11 @@ def rasterize(vectors, layer=0,
 
     return rv_array, affine
 
-# TODO: rip this function out
 
 def make_dir(path):
     """Make directory.
-
     Args:
         path (str): absolute path for directory
-
     Raise error if error other than directory exists occurs.
     """
     if path != '':
@@ -186,6 +182,10 @@ def make_dir(path):
                 raise
 
 def export_raster(raster, affine, path, out_dtype='float64', nodata=None):
+
+    if not rasterio.dtypes.check_dtype(out_dtype):
+        raise ValueError("out_dtype not recognized by rasterio")
+
     """Export raster array to geotiff
     """
     # affine takes upper left
