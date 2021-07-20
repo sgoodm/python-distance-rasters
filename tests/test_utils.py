@@ -65,13 +65,46 @@ def test_rasterize(example_shape, example_raster):
     assert (output_raster == example_raster).all
 
 
-def test_bad_rasterize(example_shape):
+def test_bad_rasterize(example_shape, example_affine):
+
+    # warns about ignoring pixel_size because valid affine and shape were passed
+    with pytest.warns(UserWarning):
+        rasterize(example_shape, pixel_size=0.5, shape=(2, 4), affine=example_affine)[0]
+
+    # warns about ignoring bounds because valid affine and shape were passed
+    with pytest.warns(UserWarning):
+        rasterize(
+            example_shape,
+            pixel_size=1.5,
+            shape=(2, 4),
+            bounds=(0, 1, 2, 3),
+            affine=example_affine,
+        )[0]
+
+    # do not provide pixel_size + bounds OR affine + shape
+    # perhaps this should be a more specific type of exception?
+    with pytest.raises(Exception):
+        rasterize(example_shape)
+
+    # fiona throws exception here because file is not found
+    # perhaps this should be a more specific type of exception?
+    with pytest.raises(Exception):
+        rasterize(
+            "bad/path/to/file",
+            pixel_size=0.5,
+            bounds=example_shape.bounds,
+            attribute="abc",
+        )
+
+    # passed vectors is not recognized, nor is it iterable
     with pytest.raises(TypeError):
         rasterize(
             example_shape, pixel_size=0.5, bounds=example_shape.bounds, attribute="abc"
         )
 
     # TODO: try sending geopandas geodataframe as vectors
+
+    # TODO: pass an iterable vector
 
 
 def test_export_raster(example_raster, example_affine, example_path):
@@ -84,21 +117,6 @@ def test_export_raster(example_raster, example_affine, example_path):
     # open raster written to example_path and make sure the data matches
     with rasterio.open(example_path) as src:
         assert (src.read() == example_raster).all
-        # TODO: open it again and see if it has the same Affine,
-        # height/width/shape, and the same data that we wrote to it
-
-
-"""
-def test_export_raster_with_nodata_val(example_raster, example_affine, example_path, nodata=42):
-
-    export_raster(example_raster, example_affine, example_path)
-
-    # test if file was created by export_raster at example_path
-    assert os.path.exists(example_path)
-
-    # TODO: open it again and see if it has the same Affine,
-    # height/width/shape, and the same data that we wrote to it
-"""
 
 
 def test_bad_export_raster(example_raster, example_affine, example_path):
