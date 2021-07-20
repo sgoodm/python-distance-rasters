@@ -153,7 +153,13 @@ def rasterize(
                     for feat in fiona.open(vectors, "r", layer=layer)
                 ]
 
-            except (AssertionError, TypeError, IOError, OSError):
+            except (
+                AssertionError,
+                TypeError,
+                IOError,
+                OSError,
+                fiona.errors.DriverError,
+            ):
                 raise Exception("Cannot open file path provided using Fiona")
 
         else:
