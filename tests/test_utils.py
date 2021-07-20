@@ -3,11 +3,13 @@ import math
 from affine import Affine
 import numpy as np
 from shapely.geometry import shape
+import rasterio
 import pytest
 from distancerasters.utils import (
     get_affine_and_shape,
     rasterize,
     export_raster,
+    convert_index_to_coords,
     calc_haversine_distance,
 )
 
@@ -74,8 +76,24 @@ def test_export_raster(example_raster, example_affine, example_path):
     # test if file was created by export_raster at example_path
     assert os.path.exists(example_path)
 
+    # open raster written to example_path and make sure the data matches
+    with rasterio.open(example_path) as src:
+        assert (src.read() == example_raster).all
+        # TODO: open it again and see if it has the same Affine,
+        # height/width/shape, and the same data that we wrote to it
+
+
+"""
+def test_export_raster_with_nodata_val(example_raster, example_affine, example_path, nodata=42):
+
+    export_raster(example_raster, example_affine, example_path)
+
+    # test if file was created by export_raster at example_path
+    assert os.path.exists(example_path)
+
     # TODO: open it again and see if it has the same Affine,
     # height/width/shape, and the same data that we wrote to it
+"""
 
 
 def test_bad_export_raster(example_raster, example_affine, example_path):
@@ -91,10 +109,12 @@ def test_bad_export_raster(example_raster, example_affine, example_path):
     # TODO: pass bad nodata to export_raster
 
 
-"""
-def test_convert_index_to_coords(index, affine):
-    convert_index_to_coords()
-"""
+def test_convert_index_to_coords(example_affine):
+    # Simple index with affine identity
+    assert convert_index_to_coords((1, 2), Affine.identity()) == (2.5, -1.5)
+
+    # Random index with example affine
+    assert convert_index_to_coords((5, 8), example_affine) == (12.75, -7.25)
 
 
 def test_calc_haversine_distance():
