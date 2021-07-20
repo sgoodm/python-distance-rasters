@@ -156,19 +156,24 @@ def rasterize(
             except (AssertionError, TypeError, IOError, OSError):
                 raise Exception("Cannot open file path provided using Fiona")
 
-        elif isinstance(obj, Iterable):
-
-            feats = [
-                (feat["geometry"], feat["properties"][str(attribute)])
-                for feat in vectors
-            ]
-
         else:
-            raise TypeError(
-                "Attribute option currently only supports GeoPandas "
-                "GeoDataFrames or paths to files which can be opened "
-                "by Fiona"
-            )
+            try:
+                # Is vectors iterable?
+                # See discussion at https://stackoverflow.com/q/1952464
+                iter(vectors)
+            except:
+                # vectors is not iterable
+                raise TypeError(
+                    "Attribute option currently only supports GeoPandas "
+                    "GeoDataFrames or paths to files which can be opened "
+                    "by Fiona"
+                )
+            else:
+                # vectors is iterable
+                feats = [
+                    (feat["geometry"], feat["properties"][str(attribute)])
+                    for feat in vectors
+                ]
 
     # TODO:
     # could also use lookup dict with attribute arg for non-binary rasters

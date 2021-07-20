@@ -65,8 +65,13 @@ def test_rasterize(example_shape, example_raster):
     assert (output_raster == example_raster).all
 
 
-def test_bad_rasterize():
-    assert 1
+def test_bad_rasterize(example_shape):
+    with pytest.raises(TypeError):
+        rasterize(
+            example_shape, pixel_size=0.5, bounds=example_shape.bounds, attribute="abc"
+        )
+
+    # TODO: try sending geopandas geodataframe as vectors
 
 
 def test_export_raster(example_raster, example_affine, example_path):
