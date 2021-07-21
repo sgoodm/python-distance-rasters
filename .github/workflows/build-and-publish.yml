@@ -9,12 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: null
-      VERSION_BUMPED: false
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
     - name: Set up Python 🐍
       uses: actions/setup-python@v2
       with:
@@ -23,19 +20,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install build
-    - name: Get version #️⃣
+    - name: Get version
       run: |
         cat setup.cfg | grep "version = " | awk '{print "VERSION="$(NF)}' >> $GITHUB_ENV
     - name: Build a binary wheel and a source tarball 🚧
-      run: |
-        python -m build --sdist --wheel --outdir dist/ .
+      run: python -m build --sdist --wheel --outdir dist/ .
     - name: Validate release tag
       run: |
-        if [ "${GITHUB_REF#refs/*/}" != "$VERSION" ]; then exit 1; fi
+        if [ "${GITHUB_REF#refs/tags/}" != "${VERSION}" ]; then exit 1; fi
     - name: Publish to Test PyPI 📦
-      if: |
-        env.VERSION_BUMPED == true &&
-        contains(env.VERSION, 'a')
+      if: contains(env.VERSION, 'a')
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -43,7 +37,6 @@ jobs:
         repository_url: https://test.pypi.org/legacy/
     - name: Publish to PyPI 📦
       if: |
-        env.VERSION_BUMPED == true &&
         !contains(env.VERSION, 'a')
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
