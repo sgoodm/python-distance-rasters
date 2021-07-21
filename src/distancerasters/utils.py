@@ -1,4 +1,3 @@
-
 import sys
 import os
 import errno
@@ -11,12 +10,7 @@ from affine import Affine
 from rasterstats.io import read_features
 import numpy as np
 
-
-PY3 = sys.version_info[0] >= 3
-if PY3:
-    string_types = str,  # pragma: no cover
-else:
-    string_types = basestring,  # pragma: no cover
+# TODO: test this one too. create a test input/output to compare future iterations against
 
 
 def get_affine_and_shape(bounds, pixel_size):
@@ -24,7 +18,7 @@ def get_affine_and_shape(bounds, pixel_size):
     try:
         pixel_size = float(pixel_size)
     except:
-        raise Exception("Invalid pixel size (could not be converted to float)")
+        raise TypeError("Invalid pixel size (could not be converted to float)")
 
     psi = 1 / pixel_size
 
@@ -36,19 +30,32 @@ def get_affine_and_shape(bounds, pixel_size):
     ymax = math.ceil(ymax * psi) / psi
     # print xmin, ymin, xmax, ymax
 
-    shape = (int((ymax-ymin)*psi), int((xmax-xmin)*psi))
+    shape = (int((ymax - ymin) * psi), int((xmax - xmin) * psi))
 
-    affine = Affine(pixel_size, 0, xmin,
-                    0, -pixel_size, ymax)
+    affine = Affine(pixel_size, 0, xmin, 0, -pixel_size, ymax)
 
     return affine, shape
 
 
-def rasterize(vectors, layer=0,
-              output=None, nodata=None,
-              pixel_size=None, bounds=None,
-              affine=None, shape=None,
-              attribute=None, fill=0, default_value=1):
+# Manually generate a tiny line (vertical, or diagonal) using WKT.
+# 5 x 5 pixel grid
+# Have a hardcoded binary of what that raster should look like
+# Check fill, default_value, nodata values and check the expected output
+
+
+def rasterize(
+    vectors,
+    layer=0,
+    output=None,
+    nodata=None,
+    pixel_size=None,
+    bounds=None,
+    affine=None,
+    shape=None,
+    attribute=None,
+    fill=0,
+    default_value=1,
+):
     """Rasterize features
 
     Options for definining the boundary and pixel size of rasterization:
@@ -62,8 +69,8 @@ def rasterize(vectors, layer=0,
     rasterized feature(s) to a GeoTiff
 
     rasterio features rasterization function:
-    https://mapbox.github.io/rasterio/topics/features.html
-    https://mapbox.github.io/rasterio/_modules/rasterio/features.html
+    https://rasterio.readthedocs.io/en/latest/topics/features.html
+    https://rasterio.readthedocs.io/en/latest/api/rasterio.features.html
 
     Args
         vectors:
@@ -95,15 +102,21 @@ def rasterize(vectors, layer=0,
         array representing rasterized features
         affine of resoluting raster
     """
-    if (affine is not None and isinstance(affine, Affine)
-        and shape is not None and isinstance(shape, tuple)
-        and len(shape) == 2):
+    if (
+        affine is not None
+        and isinstance(affine, Affine)
+        and shape is not None
+        and isinstance(shape, tuple)
+        and len(shape) == 2
+    ):
 
         if pixel_size is not None and pixel_size != affine[0]:
-            warn('Ignoring `pixel_size` provided due to valid affine and shape input.')
+            warn("Ignoring `pixel_size` provided due to valid affine and shape input.")
 
         if pixel_size is not None and bounds is not None:
-            alt_affine, alt_shape = get_affine_and_shape(bounds=bounds, pixel_size=pixel_size)
+            alt_affine, alt_shape = get_affine_and_shape(
+                bounds=bounds, pixel_size=pixel_size
+            )
 
             if alt_affine != affine or alt_shape != shape:
                 warn("Ignoring `bounds` due to valid affine and shape input")
@@ -112,43 +125,65 @@ def rasterize(vectors, layer=0,
         affine, shape = get_affine_and_shape(bounds=bounds, pixel_size=pixel_size)
 
     else:
-        raise Exception('Must provide either pixel_size and bounds or affine and shape')
-
-
+        raise Exception("Must provide either pixel_size and bounds or affine and shape")
 
     if attribute is None:
         features_iter = read_features(vectors, layer)
-        feats = [(feat['geometry'], default_value) for feat in features_iter if feat['geometry'] is not None]
+        feats = [
+            (feat["geometry"], default_value)
+            for feat in features_iter
+            if feat["geometry"] is not None
+        ]
     else:
-        if type(vectors).__name__ == 'GeoDataFrame':
-            feats = [(feat['geometry'], feat[str(attribute)]) for _, feat in vectors.iterrows()]
+        if type(vectors).__name__ == "GeoDataFrame":
+            feats = [
+                (feat["geometry"], feat[str(attribute)])
+                for _, feat in vectors.iterrows()
+            ]
 
-        elif isinstance(vectors, string_types):
+        elif isinstance(vectors, str):
 
             try:
                 # test it as fiona data source
-                with fiona.open(vectors, 'r', layer=layer) as src:
+                with fiona.open(vectors, "r", layer=layer) as src:
                     assert len(src) > 0
 
-                feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in fiona.open(vectors, 'r', layer=layer)]
+                feats = [
+                    (feat["geometry"], feat["properties"][str(attribute)])
+                    for feat in fiona.open(vectors, "r", layer=layer)
+                ]
 
-            except (AssertionError, TypeError, IOError, OSError):
+            except (
+                AssertionError,
+                TypeError,
+                IOError,
+                OSError,
+                fiona.errors.DriverError,
+            ):
                 raise Exception("Cannot open file path provided using Fiona")
 
-        elif isinstance(obj, Iterable):
-
-            feats = [(feat['geometry'], feat['properties'][str(attribute)]) for feat in vectors]
-
         else:
-            raise TypeError(
-                "Attribute option currently only supports GeoPandas "
-                "GeoDataFrames or paths to files which can be opened "
-                "by Fiona")
+            try:
+                # Is vectors iterable?
+                # See discussion at https://stackoverflow.com/q/1952464
+                iter(vectors)
+            except:
+                # vectors is not iterable
+                raise TypeError(
+                    "Attribute option currently only supports GeoPandas "
+                    "GeoDataFrames or paths to files which can be opened "
+                    "by Fiona"
+                )
+            else:
+                # vectors is iterable
+                feats = [
+                    (feat["geometry"], feat["properties"][str(attribute)])
+                    for feat in vectors
+                ]
 
     # TODO:
     # could also use lookup dict with attribute arg for non-binary rasters
     # where attribute value is not numeric
-
 
     rv_array = features.rasterize(
         feats,
@@ -157,7 +192,7 @@ def rasterize(vectors, layer=0,
         fill=fill,
         default_value=default_value,
         all_touched=True,
-        dtype=None
+        dtype=None,
     )
 
     if output is not None:
@@ -173,13 +208,11 @@ def rasterize(vectors, layer=0,
 
 def make_dir(path):
     """Make directory.
-
     Args:
         path (str): absolute path for directory
-
     Raise error if error other than directory exists occurs.
     """
-    if path != '':
+    if path != "":
         try:
             os.makedirs(path)
         except OSError as exception:
@@ -187,25 +220,29 @@ def make_dir(path):
                 raise
 
 
-def export_raster(raster, affine, path, out_dtype='float64', nodata=None):
+def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
+
+    if not rasterio.dtypes.check_dtype(out_dtype):
+        raise ValueError("out_dtype not recognized by rasterio")
+
     """Export raster array to geotiff
     """
     # affine takes upper left
     # (writing to asc directly used lower left)
     meta = {
-        'count': 1,
-        'crs': {'init': 'epsg:4326'},
-        'dtype': out_dtype,
-        'affine': affine,
-        'driver': 'GTiff',
-        'height': raster.shape[0],
-        'width': raster.shape[1],
+        "count": 1,
+        "crs": {"init": "epsg:4326"},
+        "dtype": out_dtype,
+        "affine": affine,
+        "driver": "GTiff",
+        "height": raster.shape[0],
+        "width": raster.shape[1],
         # 'nodata': -1,
         # 'compress': 'lzw'
     }
 
     if nodata is not None:
-        meta['nodata'] = nodata
+        meta["nodata"] = nodata
 
     raster_out = np.array([raster.astype(out_dtype)])
 
@@ -267,10 +304,13 @@ def calc_haversine_distance(p1, p2):
     # difference in rads
     delta_lat = math.radians(lat2 - lat1)
     delta_lon = math.radians(lon2 - lon1)
-    a = (math.sin(delta_lat/2)**2 + math.cos(math.radians(lat1)) *
-         math.cos(math.radians(lat2)) * math.sin(delta_lon/2)**2)
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    a = (
+        math.sin(delta_lat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(delta_lon / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     # km
     d = radius * c
     return d
-

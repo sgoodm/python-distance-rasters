@@ -5,13 +5,13 @@ base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 from distancerasters import build_distance_array, rasterize, export_raster
 
-from distancerasters import distance
 from distancerasters.utils import convert_index_to_coords, calc_haversine_distance
 
 
 import fiona
 import numpy as np
 import math
+from scipy.spatial import distance
 
 
 
@@ -49,9 +49,9 @@ max_dist = 100
 nrows, ncols = rv_array.shape
 
 
-# print rv_array
-print rv_array.shape
-print nrows * ncols
+# print (rv_array)
+print (rv_array.shape)
+print (nrows * ncols)
 
 # raise
 
@@ -86,9 +86,9 @@ for r in range(nrows):
     # for c in range(1000, 1100):
 
         cur_index = (r, c)
-        # print "Current index (r, c): {0}".format(cur_index)
-        # print "Current coords (lon, lat): {0}".format(
-            # convert_index_to_coords(cur_index, affine))
+        # print ("Current index (r, c): {0}".format(cur_index))
+        # print ("Current coords (lon, lat): {0}".format(
+            # convert_index_to_coords(cur_index, affine)))
 
         t1s = time.time()
 
@@ -104,9 +104,9 @@ for r in range(nrows):
         t1c += 1
 
 
-        # print "\trmin: {0}, rmax: {1}, cmin: {2}, cmax: {3}, ".format(
-        #     rmin, rmax, cmin, cmax)
-        # print sub_raster
+        # print ("\trmin: {0}, rmax: {1}, cmin: {2}, cmax: {3}, ".format(
+        #     rmin, rmax, cmin, cmax))
+        # print (sub_raster)
 
 
         t111s = time.time()
@@ -117,10 +117,10 @@ for r in range(nrows):
         t111c += 1
 
 
-        # print len(line_indexes)
-        # print line_indexes
+        # print (len(line_indexes))
+        # print (line_indexes)
         if len(line_indexes) == 0:
-            # print "\tOut of range"
+            # print ("\tOut of range")
             z[r][c] = -1
             continue
 
@@ -144,7 +144,7 @@ for r in range(nrows):
 
         # # handle multiple min matches
         # for i in dist_list_index:
-        #     print line_indexes[i]
+        #     print (line_indexes[i])
 
         # just take first if there are multiple min matches
         sub_min_index = line_indexes[dist_list_index[0][0]]
@@ -158,15 +158,15 @@ for r in range(nrows):
         t22c += 1
 
 
-        # print "\tsub_cur_index: {0}".format(sub_cur_index)
-        # print "\tMin coords (lon, lat): {0}".format(
-        #     convert_index_to_coords(min_index, affine))
+        # print ("\tsub_cur_index: {0}".format(sub_cur_index))
+        # print ("\tMin coords (lon, lat): {0}".format(
+        #     convert_index_to_coords(min_index, affine)))
 
-        # print "\tsub_min_index: {0}".format(sub_min_index)
-        # print dist_list
-        # print "\tmin_dist: {0}".format(min_dist)
-        # print dist_list_index
-        # print "\tmin_index: {0}".format(min_index)
+        # print ("\tsub_min_index: {0}".format(sub_min_index))
+        # print (dist_list)
+        # print ("\tmin_dist: {0}".format(min_dist))
+        # print (dist_list_index)
+        # print ("\tmin_index: {0}".format(min_index))
 
 
         t3s = time.time()
@@ -181,8 +181,8 @@ for r in range(nrows):
             dd_min_dist = min_dist * pixel_size
             m_min_dist = dd_min_dist * 111.321 * 10**3
 
-            # print "\tdd_min_dist: {0}".format(dd_min_dist)
-            # print "\tm_min_dist: {0}".format(m_min_dist)
+            # print ("\tdd_min_dist: {0}".format(dd_min_dist))
+            # print ("\tm_min_dist: {0}".format(m_min_dist))
 
             val = m_min_dist
 
@@ -198,46 +198,46 @@ for r in range(nrows):
         t3 += time.time() - t3s
         t3c += 1
 
-        # print "\tval: {0}".format(val)
+        # print ("\tval: {0}".format(val))
         z[r][c] = val
 
         # raise
 
     if r+1 % 50 == 0:
-        print "Row {0}-{1}/{2} ran in {3} seconds".format(r+1-50, r+1, nrows, time.time() - trow_start)
+        print ("Row {0}-{1}/{2} ran in {3} seconds".format(r+1-50, r+1, nrows, time.time() - trow_start))
 
     # row_dur += time.time() - trow_start
     # row_count += 1
 
     # if r == 200:
-    #     print "Run time: {0} seconds for {1} rows ({2}s avg)".format(row_dur, row_count, row_dur/row_count)
+    #     print ("Run time: {0} seconds for {1} rows ({2}s avg)".format(row_dur, row_count, row_dur/row_count))
 
-    #     print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
-    #     print "t11 total: {0}, count: {1}, avg: {2}".format(t11, t11c, t11/t11c)
-    #     print "t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c)
+    #     print ("t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c))
+    #     print ("t11 total: {0}, count: {1}, avg: {2}".format(t11, t11c, t11/t11c))
+    #     print ("t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c))
 
-    #     print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
-    #     print "t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c)
-    #     print "t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c)
+    #     print ("t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c))
+    #     print ("t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c))
+    #     print ("t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c))
 
     #     raise
 
 
-# print rv_array
-# print z
+# print (rv_array)
+# print (z)
 
-print rv_array.shape
-print nrows * ncols
+print (rv_array.shape)
+print (nrows * ncols)
 
-print "t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c)
-print "t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c)
+print ("t1 total: {0}, count: {1}, avg: {2}".format(t1, t1c, t1/t1c))
+print ("t111 total: {0}, count: {1}, avg: {2}".format(t111, t111c, t111/t111c))
 
-print "t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c)
-print "t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c)
-print "t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c)
+print ("t2 total: {0}, count: {1}, avg: {2}".format(t2, t2c, t2/t2c))
+print ("t22 total: {0}, count: {1}, avg: {2}".format(t22, t22c, t22/t22c))
+print ("t3 total: {0}, count: {1}, avg: {2}".format(t3, t3c, t3/t3c))
 
 dur = time.time() - t_start
-print "Run time: {0} seconds".format(round(dur, 2))
+print ("Run time: {0} seconds".format(round(dur, 2)))
 
 
 
