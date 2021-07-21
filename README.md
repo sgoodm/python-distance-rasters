@@ -1,7 +1,7 @@
 # distance-rasters
 
-[![build badge](https://github.com/jacobwhall/python-distance-rasters/actions/workflows/test-with-coverage.yml/badge.svg)](https://github.com/jacobwhall/python-distance-rasters/actions/workflows/test-and-coverage.yml)
-[![Coverage Status](https://coveralls.io/repos/github/jacobwhall/python-distance-rasters/badge.svg?branch=master)](https://coveralls.io/github/jacobwhall/python-distance-rasters?branch=master)
+[![build badge](https://github.com/sgoodm/python-distance-rasters/actions/workflows/test-with-coverage.yml/badge.svg)](https://github.com/sgoodm/python-distance-rasters/actions/workflows/test-and-coverage.yml)
+[![Coverage Status](https://coveralls.io/repos/github/sgoodm/python-distance-rasters/badge.svg?branch=master)](https://coveralls.io/github/sgoodm/python-distance-rasters?branch=master)
 
 Generate distance raster using arbitrary sets of spatial features
 
@@ -23,7 +23,7 @@ pip install -i https://test.pypi.org/simple/ distancerasters
 
 To install this package from source, first clone this repository, then use pip to install it:
 ```
-git clone git@github.com:jacobwhall/python-distance-rasters.git
+git clone git@github.com:sgoodm/python-distance-rasters.git
 cd python-distance-rasters
 pip install .
 ```
