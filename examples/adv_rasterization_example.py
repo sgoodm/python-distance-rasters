@@ -6,25 +6,22 @@ used to create more complex dataset than simply rasterizing
 a single feature layer
 """
 
-
-import os
-base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-from distancerasters import build_distance_array, rasterize, export_raster
-
-
-# -----------------------------------------------------------------------------
-
-from affine import Affine
 import numpy as np
+from affine import Affine
+import distancerasters as dr
 
 
-shorelines_path = "gshhg-shp-2.3.6/GSHHS_shp/f/GSHHS_f_L1.shp"
-lakes_path = "natural-earth-vector/10m_physical/ne_10m_lakes.shp"
-rivers_path = "natural-earth-vector/10m_physical/ne_10m_rivers_lake_centerlines.shp"
+# paths to multiple vector datasets
+oceans_path = "oceans.geojson"
+lakes_path = "lakes.geojson"
+rivers_path = "rivers.geojson"
 
-
+# define resolution
 pixel_size = 0.01
+
+# define shape and affine based on pixel size and bounds for desired area
+#    because we are rasterizing multiple layers with different bounding boxes,
+#    we likely want to specify a custom bounding box
 
 xmin = -180
 xmax = 180
@@ -34,38 +31,27 @@ ymax = 90
 affine = Affine(pixel_size, 0, xmin,
                 0, -pixel_size, ymax)
 
-
 shape = (int((ymax-ymin)/pixel_size), int((xmax-xmin)/pixel_size))
 
-shorelines, _ = rasterize(shorelines_path, affine=affine, shape=shape)
-shorelines = np.logical_not(shorelines).astype(int)
 
-lakes, _ = rasterize(lakes_path, affine=affine, shape=shape)
-rivers, _ = rasterize(rivers_path, affine=affine, shape=shape)
+# rasterize all layers using the common bounding box so that we can combine
+# resulting rasterized arrays later
+oceans, _ = dr.rasterize(oceans_path, affine=affine, shape=shape)
+lakes, _ = dr.rasterize(lakes_path, affine=affine, shape=shape)
+rivers, _ = dr.rasterize(rivers_path, affine=affine, shape=shape)
 
-
-water = shorelines + lakes + rivers
-
-
-water_output_raster_path = "water_binary.tif"
-
-export_raster(water, affine, water_output_raster_path)
+# combine rasterized arrays
+water = oceans + lakes + rivers
 
 
-# -----------------------------------------------------------------------------
-
-# import rasterio
-# water_src = rasterio.open(water_output_raster_path)
-# water = water_src.read()[0]
-# affine = water_src.affine
-
-distance_output_raster_path = "water_distance.tif"
-
+# generate distance raster
 
 def raster_conditional(rarray):
     return (rarray == 1)
 
-dist = build_distance_array(water, affine=affine,
+distance_output_raster_path = "water_distance.tif"
+
+dist = dr.build_distance_array(water, affine=affine,
                             output=distance_output_raster_path,
                             conditional=raster_conditional)
 
