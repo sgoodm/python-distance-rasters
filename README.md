@@ -2,6 +2,7 @@
 
 [![build badge](https://github.com/sgoodm/python-distance-rasters/actions/workflows/test-with-coverage.yml/badge.svg)](https://github.com/sgoodm/python-distance-rasters/actions/workflows/test-and-coverage.yml)
 [![Coverage Status](https://coveralls.io/repos/github/sgoodm/python-distance-rasters/badge.svg?branch=master)](https://coveralls.io/github/sgoodm/python-distance-rasters?branch=master)
+[![Downloads](https://static.pepy.tech/personalized-badge/distancerasters?period=total&units=international_system&left_color=black&right_color=green&left_text=Downloads)](https://pepy.tech/project/distancerasters)
 
 Generate distance raster using arbitrary sets of spatial features
 
