@@ -144,10 +144,6 @@ def rasterize(
         elif isinstance(vectors, str):
 
             try:
-                # test it as fiona data source
-                with fiona.open(vectors, "r", layer=layer) as src:
-                    assert len(src) > 0
-
                 feats = [
                     (feat["geometry"], feat["properties"][str(attribute)])
                     for feat in fiona.open(vectors, "r", layer=layer)
