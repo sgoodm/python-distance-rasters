@@ -233,12 +233,9 @@ def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
         "driver": "GTiff",
         "height": raster.shape[0],
         "width": raster.shape[1],
-        # 'nodata': -1,
+        "nodata": nodata,
         # 'compress': 'lzw'
     }
-
-    if nodata is not None:
-        meta["nodata"] = nodata
 
     raster_out = np.array([raster.astype(out_dtype)])
 
