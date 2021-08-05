@@ -18,16 +18,16 @@ The below example calculates the distance to a rough approximation of a section 
 import fiona
 import distancerasters as dr
 
-
 # load vector data (crs = epsg:4326)
 shp = fiona.open("examples/linestrings.geojson", "r")
 
 # resolution (in units matching projection) at which vector data will be rasterized
 pixel_size = 0.01
 
-
 # rasterize vector data and output to geotiff
-rv_array, affine = dr.rasterize(shp, pixel_size=pixel_size, bounds=shp.bounds, output="examples/linestrings_rasterized_binary.tif")
+rv_array, affine = dr.rasterize(
+    shp, pixel_size=pixel_size, bounds=shp.bounds,
+    output="examples/linestrings_rasterized_binary.tif")
 
 # option to manually export rasterized vector data
 # dr.export_raster(rv_array, affine, "linestrings_rasterized_binary.tif")
@@ -38,9 +38,10 @@ def raster_conditional(rarray):
     return (rarray == 1)
 
 # generate distance array and output to geotiff
-dist_array = dr.build_distance_array(rv_array, affine=affine,
-                     output="examples/linestrings_distance_raster.tif",
-                     conditional=raster_conditional)
+dist_array = dr.build_distance_array(
+    rv_array, affine=affine,
+    output="examples/linestrings_distance_raster.tif",
+    conditional=raster_conditional)
 
 # Output:
 #
@@ -53,6 +54,7 @@ The resulting distance raster indicates the distance to the line segment. In the
 
 ![Stylized Example Result](examples/styled_example_result.png)
 
+An additional example is included in  `examples/adv_rasterization_example.py` demonstrates how multiple sets of vector data can be combined to create a distance raster.
 
 
 ## Installation
