@@ -6,3 +6,6 @@ dist/*
 .DS_Store
 MANIFEST
 *.egg-info
+htmlcov
+.coverage
+tests/testdata
