@@ -1,6 +1,4 @@
-import sys
 import os
-import errno
 import math
 from warnings import warn
 import fiona
