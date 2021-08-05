@@ -4,6 +4,7 @@ from affine import Affine
 import numpy as np
 from shapely.geometry import shape
 import rasterio
+import geopandas as gpd
 import pytest
 from distancerasters.utils import (
     get_affine_and_shape,
@@ -19,6 +20,15 @@ def example_shape():
     # geometry from (1/10 scale):
     # https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
     return shape({"type": "LineString", "coordinates": [(3, 1), (1, 3), (4, 4)]})
+
+
+@pytest.fixture
+def example_feature():
+    # geometry from (1/10 scale):
+    # https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+    return {"geometry": {"type": "LineString", "coordinates": [(3, 1), (1, 3), (4, 4)]}, "properties": {"id": 1}}
+
+
 
 
 @pytest.fixture
@@ -63,12 +73,16 @@ def test_bad_get_affine_and_shape():
 
 
 def test_rasterize(example_shape, example_raster, example_path):
-    
+
     # pass shapely shape geometry to rasterize
     output_raster = rasterize(
         example_shape, pixel_size=0.5, bounds=example_shape.bounds
     )[0]
     assert (output_raster == example_raster).all
+
+
+
+def test_rasterize_output(example_shape, example_raster, example_path):
 
     # same as above, with output path
     output_raster = rasterize(
@@ -77,6 +91,30 @@ def test_rasterize(example_shape, example_raster, example_path):
     # open raster written to example_path and make sure the data matches
     with rasterio.open(example_path) as src:
         assert (src.read() == example_raster).all
+
+
+def test_geodataframe_rasterize(example_shape, example_raster, example_path):
+
+    geodataframe = gpd.GeoDataFrame([{"id": 0, "geometry": example_shape}])
+
+    # pass geodataframe to rasterize
+    output_raster = rasterize(
+        geodataframe, pixel_size=0.5, bounds=geodataframe.total_bounds, attribute="id"
+    )[0]
+    assert (output_raster == example_raster).all
+
+
+def test_iterable_rasterize(example_feature, example_raster, example_path):
+
+    bounds = shape(example_feature["geometry"]).bounds
+    example_iterable = [example_feature]
+
+    # pass iterable of geometry to rasterize
+    output_raster = rasterize(
+        example_iterable, pixel_size=0.5, bounds=bounds, attribute="id"
+    )[0]
+    assert (output_raster == example_raster).all
+
 
 def test_bad_rasterize(example_shape, example_affine):
 
