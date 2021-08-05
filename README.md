@@ -7,7 +7,12 @@ Generate distance raster using arbitrary sets of spatial features
 [![Downloads](https://static.pepy.tech/personalized-badge/distancerasters?period=total&units=international_system&left_color=lightgrey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/distancerasters)
 
 
-More in depth description and context. Guidelines for use and tips.
+Distance-rasters was designed to support the generation of rasters in which each pixel is the distance to a discrete set of user defined locations. Common uses include calculating the distances to roads, water features, or cities. Distance-rasters is flexible and can support a wide range of use cases and input data, and provides the tools necessary for rasterizing vector features.
+
+The most notable existing tool for calculating raster distance or proximity is GDAL's `gdal_proximity.py` (See: https://gdal.org/programs/gdal_proximity.html#gdal-proximity
+) which while powerful, is not flexible enough for many use cases and has practical limitations when integrating distance calculations into broader workflows. Distance-rasters offers a simple, flexible, and Pythonic alternative.
+
+See the Example section below for a simple example of using distance-rasters. Distance-rasters is extremely fast for small areas at moderate resolution, and has performed well when tested at global scales with moderate-coarse resolution (1km).
 
 
 ## Example
@@ -54,7 +59,7 @@ The resulting distance raster indicates the distance to the line segment. In the
 
 ![Stylized Example Result](examples/styled_example_result.png)
 
-An additional example is included in  `examples/adv_rasterization_example.py` demonstrates how multiple sets of vector data can be combined to create a distance raster.
+An additional example is included in  `examples/adv_rasterization_example.py` demonstrates how multiple sets of vector data can be combined to create a distance raster. This example notably illustrates how the area for which distances are calculated can be adjusted based on a user's needs.
 
 
 ## Installation
