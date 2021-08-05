@@ -8,8 +8,6 @@ from affine import Affine
 from rasterstats.io import read_features
 import numpy as np
 
-# TODO: test this one too. create a test input/output to compare future iterations against
-
 
 def get_affine_and_shape(bounds, pixel_size):
 
@@ -26,19 +24,12 @@ def get_affine_and_shape(bounds, pixel_size):
     ymin = math.floor(ymin * psi) / psi
     xmax = math.ceil(xmax * psi) / psi
     ymax = math.ceil(ymax * psi) / psi
-    # print xmin, ymin, xmax, ymax
 
     shape = (int((ymax - ymin) * psi), int((xmax - xmin) * psi))
 
     affine = Affine(pixel_size, 0, xmin, 0, -pixel_size, ymax)
 
     return affine, shape
-
-
-# Manually generate a tiny line (vertical, or diagonal) using WKT.
-# 5 x 5 pixel grid
-# Have a hardcoded binary of what that raster should look like
-# Check fill, default_value, nodata values and check the expected output
 
 
 def rasterize(
@@ -192,11 +183,6 @@ def rasterize(
     if output is not None:
         export_raster(rv_array, affine, output, nodata=nodata)
 
-    # print rv_array
-    # print rv_array.shape
-    # print shape
-    # print affine
-
     return rv_array, affine
 
 
@@ -226,7 +212,6 @@ def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
     if path != "":
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    # write geotif file
     with rasterio.open(path, "w", **meta) as dst:
         dst.write(raster_out)
 
