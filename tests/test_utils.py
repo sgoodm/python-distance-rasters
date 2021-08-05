@@ -44,7 +44,11 @@ def example_affine():
 
 @pytest.fixture
 def example_path():
-    return "tests/testdata/lorem/ipsum/dolor/amet"
+    path = "tests/testdata/lorem/ipsum/dolor/amet"
+    # remove any file at example_path that may have been created in previous tests
+    if os.path.isfile(path):
+        os.remove(path)
+    return path
 
 
 def test_get_affine_and_shape():
@@ -58,12 +62,21 @@ def test_bad_get_affine_and_shape():
         get_affine_and_shape((0, 0, 0, 0), "string")
 
 
-def test_rasterize(example_shape, example_raster):
+def test_rasterize(example_shape, example_raster, example_path):
+    
+    # pass shapely shape geometry to rasterize
     output_raster = rasterize(
         example_shape, pixel_size=0.5, bounds=example_shape.bounds
     )[0]
     assert (output_raster == example_raster).all
 
+    # same as above, with output path
+    output_raster = rasterize(
+        example_shape, pixel_size=0.5, bounds=example_shape.bounds, output=example_path
+    )[0]
+    # open raster written to example_path and make sure the data matches
+    with rasterio.open(example_path) as src:
+        assert (src.read() == example_raster).all
 
 def test_bad_rasterize(example_shape, example_affine):
 
