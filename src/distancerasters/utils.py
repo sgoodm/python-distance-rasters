@@ -213,7 +213,7 @@ def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
         "count": 1,
         "crs": {"init": "epsg:4326"},
         "dtype": out_dtype,
-        "affine": affine,
+        "transform": affine,
         "driver": "GTiff",
         "height": raster.shape[0],
         "width": raster.shape[1],
