@@ -48,16 +48,9 @@ def build_distance_array(raster_array, affine=None, output=None, conditional=Non
 
 
     # kd-tree instance
-    # https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.spatial.cKDTree.html
-    #
-    # Alternatives (slower during testing):
-    #   from sklearn.neighbors import KDTree, BallTree
-    #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html
-    #   http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.BallTree.html
-    #
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html
     # As of SciPy v1.6.0, cKDTree is identical to KDTree, and the name is only kept for
-    # backward compatibility. However, Scipy 1.6.0 drops suppoert for python 3.6, so
-    # holding off on changing this.
+    # backward compatibility. See Issue #12 for more details.
     t_start = time.time()
     k = cKDTree(data=np.array(np.where(conditional(raster_array))).T, leafsize=64)
     print("Tree build time: {0} seconds".format(time.time() - t_start))
