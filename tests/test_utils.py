@@ -26,7 +26,7 @@ def example_shape():
 def example_feature():
     # geometry from (1/10 scale):
     # https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
-    return {"geometry": {"type": "LineString", "coordinates": [(3, 1), (1, 3), (4, 4)]}, "properties": {"id": 1}}
+    return {"type": "Feature", "geometry": shape({"type": "LineString", "coordinates": [(3, 1), (1, 3), (4, 4)]}), "properties": {"id": 1}}
 
 
 
@@ -93,25 +93,36 @@ def test_rasterize_output(example_shape, example_raster, example_path):
         assert (src.read() == example_raster).all
 
 
-def test_geodataframe_rasterize(example_shape, example_raster, example_path):
+def test_rasterize_with_attribute(example_shape, example_raster):
+
+    geodataframe = gpd.GeoDataFrame([{"id": 0, "geometry": example_shape, "value": 2}])
+
+    # pass geodataframe to rasterize
+    output_raster = rasterize(
+        geodataframe, pixel_size=0.5, bounds=geodataframe.total_bounds, attribute="value"
+    )[0]
+    assert (output_raster == example_raster * 2).all()
+
+
+def test_geodataframe_rasterize(example_shape, example_raster):
 
     geodataframe = gpd.GeoDataFrame([{"id": 0, "geometry": example_shape}])
 
     # pass geodataframe to rasterize
     output_raster = rasterize(
-        geodataframe, pixel_size=0.5, bounds=geodataframe.total_bounds, attribute="id"
+        geodataframe, pixel_size=0.5, bounds=geodataframe.total_bounds
     )[0]
-    assert (output_raster == example_raster).all
+    assert (output_raster == example_raster).all()
 
 
-def test_iterable_rasterize(example_feature, example_raster, example_path):
+def test_iterable_rasterize(example_feature, example_raster):
 
     bounds = shape(example_feature["geometry"]).bounds
     example_iterable = [example_feature]
 
     # pass iterable of geometry to rasterize
     output_raster = rasterize(
-        example_iterable, pixel_size=0.5, bounds=bounds, attribute="id"
+        example_iterable, pixel_size=0.5, bounds=bounds
     )[0]
     assert (output_raster == example_raster).all
 
@@ -137,25 +148,24 @@ def test_bad_rasterize(example_shape, example_affine):
     with pytest.raises(Exception):
         rasterize(example_shape)
 
+
+    # attriubte is not a valid keyword
+    with pytest.raises(KeyError):
+        rasterize(
+            example_shape, pixel_size=0.5, bounds=example_shape.bounds, attribute="abc"
+        )
+
+
+def test_bad_rasterize_output(example_shape, example_affine):
+
     # fiona throws exception here because file is not found
     # perhaps this should be a more specific type of exception?
     with pytest.raises(Exception):
         rasterize(
             "bad/path/to/file",
             pixel_size=0.5,
-            bounds=example_shape.bounds,
-            attribute="abc",
+            bounds=example_shape.bounds
         )
-
-    # passed vectors is not recognized, nor is it iterable
-    with pytest.raises(TypeError):
-        rasterize(
-            example_shape, pixel_size=0.5, bounds=example_shape.bounds, attribute="abc"
-        )
-
-    # TODO: try sending geopandas geodataframe as vectors
-
-    # TODO: pass an iterable vector
 
 
 def test_export_raster(example_raster, example_affine, example_path):

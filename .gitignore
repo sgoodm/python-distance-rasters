@@ -8,5 +8,6 @@ MANIFEST
 *.egg-info
 htmlcov
 .coverage
-tests/
+tests/*
+!tests/*.py
 examples/*.tif

@@ -39,9 +39,13 @@ def test_build_distance_array(example_raster_array, example_affine, example_path
 
     assert built_array[0][3] == math.sqrt(5)
 
+
+def test_build_distance_array_output(example_raster_array, example_affine, example_path):
+
     # Delete any previous test export, if it exists
     if os.path.isfile(example_path):
         os.remove(example_path)
+
     built_array = build_distance_array(
         example_raster_array, affine=example_affine, output=example_path
     )
