@@ -9,29 +9,6 @@ from rasterstats.io import read_features
 import numpy as np
 
 
-def get_affine_and_shape(bounds, pixel_size):
-
-    try:
-        pixel_size = float(pixel_size)
-    except:
-        raise TypeError("Invalid pixel size (could not be converted to float)")
-
-    psi = 1 / pixel_size
-
-    xmin, ymin, xmax, ymax = bounds
-
-    xmin = math.floor(xmin * psi) / psi
-    ymin = math.floor(ymin * psi) / psi
-    xmax = math.ceil(xmax * psi) / psi
-    ymax = math.ceil(ymax * psi) / psi
-
-    shape = (int((ymax - ymin) * psi), int((xmax - xmin) * psi))
-
-    affine = Affine(pixel_size, 0, xmin, 0, -pixel_size, ymax)
-
-    return affine, shape
-
-
 def rasterize(
     vectors,
     layer=0,
@@ -184,6 +161,30 @@ def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
         dst.write(raster_out)
 
 
+def get_affine_and_shape(bounds, pixel_size):
+    """Get affine and shape from bounds and pixel size
+    """
+    try:
+        pixel_size = float(pixel_size)
+    except:
+        raise TypeError("Invalid pixel size (could not be converted to float)")
+
+    psi = 1 / pixel_size
+
+    xmin, ymin, xmax, ymax = bounds
+
+    xmin = math.floor(xmin * psi) / psi
+    ymin = math.floor(ymin * psi) / psi
+    xmax = math.ceil(xmax * psi) / psi
+    ymax = math.ceil(ymax * psi) / psi
+
+    shape = (int((ymax - ymin) * psi), int((xmax - xmin) * psi))
+
+    affine = Affine(pixel_size, 0, xmin, 0, -pixel_size, ymax)
+
+    return affine, shape
+
+
 def convert_index_to_coords(index, affine):
     """convert index values to coordinates
 
@@ -207,9 +208,9 @@ def convert_index_to_coords(index, affine):
 
     pixel_size = affine[0]
     xmin = affine[2]
-    lon = xmin + pixel_size * (0.5 + c)
-
     ymax = affine[5]
+
+    lon = xmin + pixel_size * (0.5 + c)
     lat = ymax - pixel_size * (0.5 + r)
 
     return (lon, lat)
