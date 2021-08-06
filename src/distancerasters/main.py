@@ -69,7 +69,7 @@ class DistanceRaster(object):
         t_start = time.time()
         if tree_type == "kdtree":
             self.tree = cKDTree(data=np.array(np.where(self.conditional(self.raster_array))).T, leafsize=64)
-        print("Tree build time: {0} seconds".format(time.time() - t_start))
+        print("Tree build time: {0} seconds".format(round(time.time() - t_start, 4)))
 
 
     def _calculate_distance(self):
@@ -108,7 +108,7 @@ class DistanceRaster(object):
 
                 self.dist_array[r][c] = val
 
-        print("Distance calc run time: {0} seconds".format(round(time.time() - t_start, 2)))
+        print("Distance calc run time: {0} seconds".format(round(time.time() - t_start, 4)))
 
 
     def output_raster(self, output_path):
