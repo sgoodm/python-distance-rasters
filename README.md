@@ -59,7 +59,7 @@ The resulting distance raster indicates the distance to the line segment. In the
 
 ![Stylized Example Result](examples/styled_example_result.png)
 
-An additional example is included in  `examples/adv_rasterization_example.py` demonstrates how multiple sets of vector data can be combined to create a distance raster. This example notably illustrates how the area for which distances are calculated can be adjusted based on a user's needs.
+An additional example is included in  `examples/adv_rasterization_example.py` to demonstrate how multiple sets of vector data can be combined to create a distance raster. This example also illustrates how the area for which distances are calculated can be adjusted based on a user's needs.
 
 
 ## Installation
@@ -67,7 +67,7 @@ An additional example is included in  `examples/adv_rasterization_example.py` de
 
 ### Using pip
 
-The latest version of distance-rasters is [available on PyPi](https://pypi.org/project/distancerasters/), so you can install it with pip:
+The latest version of distance-rasters is [available on PyPi](https://pypi.org/project/distancerasters/), and can be installed with Pip:
 ```
 pip install distancerasters
 ```
@@ -79,7 +79,7 @@ pip install -i https://test.pypi.org/simple/ distancerasters
 
 ### From source
 
-To install this package from source, first clone this repository, then use pip to install it:
+To install this package from source, first clone this repository, then use pip to install:
 ```
 git clone git@github.com:sgoodm/python-distance-rasters.git
 cd python-distance-rasters
@@ -97,7 +97,7 @@ New issues are always welcome, and if you'd like to make a change, fork the repo
 
 We use Pytest and Coveralls to run unit tests and track code coverage of tests. If you submit code, please make sure it passes existing tests and adds relevant testing coverage for new features.
 
-You can run tests and coverage checks locally, or you can fork the repository and utilize GitHub actions and Coveralls. To use GitHub actions and Coveralls, you'll need to add your forked repo to your Coverall accounts and add the repository's token to your repository as a GitHub Secret (see below).
+You can run tests and coverage checks locally, or you can fork the repository and utilize GitHub actions and Coveralls. To use GitHub actions and Coveralls, you'll need to add your forked repo to your own Coverall accounts and add you Coveralls token to your repository as a GitHub Secret (see below).
 
 
 To run tests and coverage checks locally, you can use the following commands:
@@ -109,7 +109,7 @@ coverage html
 
 ### GitHub Secrets
 
-In a cloned repository, there are three GitHub Secrets required to enable all of our GitHub Actions:
+There are three GitHub Secrets required to enable all of our GitHub Actions:
 1. COVERALLS_REPO_TOKEN - this is the API token for Coveralls, used for publishing code coverage reports
 2. TEST_PYPI_API_TOKEN - this is the API token for TestPyPi, needed for publishing alpha releases
 3. PYPI_API_TOKEN - this is the API token for PyPi, needed for publishing releases
