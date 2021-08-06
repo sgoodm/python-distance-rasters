@@ -57,7 +57,7 @@ my_dr = dr.DistanceRaster(rv_array, affine=affine,
 
 The resulting distance raster indicates the distance to the line segment. In the image below, areas close to the line segment (in dark blue) are yellow and get darker the further away you go.
 
-![Stylized Example Result](examples/styled_example_result.png)
+![Stylized Example Result](https://github.com/sgoodm/python-distance-rasters/blob/master/examples/styled_example_result.png)
 
 An additional example is included in  `examples/adv_rasterization_example.py` to demonstrate how multiple sets of vector data can be combined to create a distance raster. This example also illustrates how the area for which distances are calculated can be adjusted based on a user's needs.
 
