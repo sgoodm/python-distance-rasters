@@ -22,9 +22,9 @@ def raster_conditional(rarray):
     return (rarray == 1)
 
 # generate distance array and output to geotiff
-dist_array = dr.build_distance_array(rv_array, affine=affine,
-                     output="examples/linestrings_distance_raster.tif",
-                     conditional=raster_conditional)
+dist_array = dr.DistanceRaster(rv_array, affine=affine,
+                               output_path="examples/linestrings_distance_raster.tif",
+                               conditional=raster_conditional)
 
 # Output:
 #

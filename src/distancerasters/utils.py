@@ -9,29 +9,6 @@ from rasterstats.io import read_features
 import numpy as np
 
 
-def get_affine_and_shape(bounds, pixel_size):
-
-    try:
-        pixel_size = float(pixel_size)
-    except:
-        raise TypeError("Invalid pixel size (could not be converted to float)")
-
-    psi = 1 / pixel_size
-
-    xmin, ymin, xmax, ymax = bounds
-
-    xmin = math.floor(xmin * psi) / psi
-    ymin = math.floor(ymin * psi) / psi
-    xmax = math.ceil(xmax * psi) / psi
-    ymax = math.ceil(ymax * psi) / psi
-
-    shape = (int((ymax - ymin) * psi), int((xmax - xmin) * psi))
-
-    affine = Affine(pixel_size, 0, xmin, 0, -pixel_size, ymax)
-
-    return affine, shape
-
-
 def rasterize(
     vectors,
     layer=0,
@@ -60,6 +37,11 @@ def rasterize(
     rasterio features rasterization function:
     https://rasterio.readthedocs.io/en/latest/topics/features.html
     https://rasterio.readthedocs.io/en/latest/api/rasterio.features.html
+
+
+    TODO:
+    could also use lookup dict with attribute arg for non-binary rasters
+    where attribute value is not numeric
 
     Args
         vectors:
@@ -116,59 +98,22 @@ def rasterize(
     else:
         raise Exception("Must provide either pixel_size and bounds or affine and shape")
 
+
+    features_iter = read_features(vectors, layer)
+
     if attribute is None:
-        features_iter = read_features(vectors, layer)
         feats = [
             (feat["geometry"], default_value)
             for feat in features_iter
             if feat["geometry"] is not None
         ]
     else:
-        if type(vectors).__name__ == "GeoDataFrame":
-            feats = [
-                (feat["geometry"], feat[str(attribute)])
-                for _, feat in vectors.iterrows()
-            ]
+        feats = [
+            (feat["geometry"], feat["properties"][str(attribute)])
+            for feat in features_iter
+            if feat["geometry"] is not None
+        ]
 
-        elif isinstance(vectors, str):
-
-            try:
-                feats = [
-                    (feat["geometry"], feat["properties"][str(attribute)])
-                    for feat in fiona.open(vectors, "r", layer=layer)
-                ]
-
-            except (
-                AssertionError,
-                TypeError,
-                IOError,
-                OSError,
-                fiona.errors.DriverError,
-            ):
-                raise Exception("Cannot open file path provided using Fiona")
-
-        else:
-            try:
-                # Is vectors iterable?
-                # See discussion at https://stackoverflow.com/q/1952464
-                iter(vectors)
-            except:
-                # vectors is not iterable
-                raise TypeError(
-                    "Attribute option currently only supports GeoPandas "
-                    "GeoDataFrames or paths to files which can be opened "
-                    "by Fiona"
-                )
-            else:
-                # vectors is iterable
-                feats = [
-                    (feat["geometry"], feat["properties"][str(attribute)])
-                    for feat in vectors
-                ]
-
-    # TODO:
-    # could also use lookup dict with attribute arg for non-binary rasters
-    # where attribute value is not numeric
 
     rv_array = features.rasterize(
         feats,
@@ -216,6 +161,30 @@ def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
         dst.write(raster_out)
 
 
+def get_affine_and_shape(bounds, pixel_size):
+    """Get affine and shape from bounds and pixel size
+    """
+    try:
+        pixel_size = float(pixel_size)
+    except:
+        raise TypeError("Invalid pixel size (could not be converted to float)")
+
+    psi = 1 / pixel_size
+
+    xmin, ymin, xmax, ymax = bounds
+
+    xmin = math.floor(xmin * psi) / psi
+    ymin = math.floor(ymin * psi) / psi
+    xmax = math.ceil(xmax * psi) / psi
+    ymax = math.ceil(ymax * psi) / psi
+
+    shape = (int((ymax - ymin) * psi), int((xmax - xmin) * psi))
+
+    affine = Affine(pixel_size, 0, xmin, 0, -pixel_size, ymax)
+
+    return affine, shape
+
+
 def convert_index_to_coords(index, affine):
     """convert index values to coordinates
 
@@ -239,9 +208,9 @@ def convert_index_to_coords(index, affine):
 
     pixel_size = affine[0]
     xmin = affine[2]
-    lon = xmin + pixel_size * (0.5 + c)
-
     ymax = affine[5]
+
+    lon = xmin + pixel_size * (0.5 + c)
     lat = ymax - pixel_size * (0.5 + r)
 
     return (lon, lat)

@@ -3,7 +3,7 @@ import math
 from affine import Affine
 import pytest
 import numpy as np
-from distancerasters import build_distance_array
+from distancerasters import DistanceRaster
 from distancerasters.utils import calc_haversine_distance
 
 
@@ -25,7 +25,7 @@ def example_path():
 
 def test_build_distance_array(example_raster_array, example_affine, example_path):
 
-    built_array = build_distance_array(example_raster_array)
+    built_array = DistanceRaster(example_raster_array).dist_array
 
     # [1][1] was 1 in the passed array
     # The distance should be 0
@@ -39,11 +39,15 @@ def test_build_distance_array(example_raster_array, example_affine, example_path
 
     assert built_array[0][3] == math.sqrt(5)
 
+
+def test_build_distance_array_output(example_raster_array, example_affine, example_path):
+
     # Delete any previous test export, if it exists
     if os.path.isfile(example_path):
         os.remove(example_path)
-    built_array = build_distance_array(
-        example_raster_array, affine=example_affine, output=example_path
+
+    built_array = DistanceRaster(
+        example_raster_array, affine=example_affine, output_path=example_path
     )
     # export_raster should have been called, and wrote output to example_path
     # perhaps we should more rigorously check if the exported raster is correct?
@@ -52,7 +56,7 @@ def test_build_distance_array(example_raster_array, example_affine, example_path
 
 def test_build_distance_array_with_affine(example_raster_array, example_affine):
 
-    built_array = build_distance_array(example_raster_array, affine=example_affine)
+    built_array = DistanceRaster(example_raster_array, affine=example_affine).dist_array
 
     # Testing the same array elements as the last function did
 
@@ -72,19 +76,19 @@ def test_build_distance_array_with_affine(example_raster_array, example_affine):
 
 def test_bad_build_distance_array(example_raster_array):
     with pytest.raises(TypeError):
-        # Pass build_distance_array a 2D list
-        build_distance_array([[0, 1], [1, 0]])
+        # Pass DistanceRaster a 2D list
+        DistanceRaster([[0, 1], [1, 0]])
 
     with pytest.raises(TypeError):
-        # Pass build_distance_array a bad affine
-        build_distance_array(example_raster_array, affine="not_an_affine")
+        # Pass DistanceRaster a bad affine
+        DistanceRaster(example_raster_array, affine="not_an_affine")
 
     # perhaps this should be a more specific type of exception?
     with pytest.raises(Exception):
-        # Pass build_distance_array an output without an affine
-        build_distance_array(example_raster_array, output="just_output")
+        # Pass DistanceRaster an output without an affine
+        DistanceRaster(example_raster_array, output_path="just_output")
 
     # perhaps this should be a more specific type of exception?
     with pytest.raises(Exception):
-        # Pass build_distance_array an uncallable conditional
-        build_distance_array(example_raster_array, conditional="not_a_function")
+        # Pass DistanceRaster an uncallable conditional
+        DistanceRaster(example_raster_array, conditional="not_a_function")

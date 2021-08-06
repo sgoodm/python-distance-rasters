@@ -8,7 +8,7 @@ a single feature layer
 
 import numpy as np
 from affine import Affine
-import distancerasters as dr
+from distancerasters as dr
 
 
 # paths to multiple vector datasets
@@ -51,8 +51,8 @@ def raster_conditional(rarray):
 
 distance_output_raster_path = "water_distance.tif"
 
-dist = dr.build_distance_array(water, affine=affine,
-                            output=distance_output_raster_path,
-                            conditional=raster_conditional)
+dist = dr.DistanceRaster(water, affine=affine,
+                         output_path=distance_output_raster_path,
+                         conditional=raster_conditional)
 
 
