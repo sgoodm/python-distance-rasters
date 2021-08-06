@@ -5,93 +5,111 @@ from scipy.spatial import cKDTree
 from .utils import export_raster, convert_index_to_coords, calc_haversine_distance
 
 
-def build_distance_array(raster_array, affine=None, output=None, conditional=None):
-    """build distance array from raster array
+class DistanceRaster(object):
 
-    Args
-        raster_array (np array):
-            array to use for distance calculations
-        affine (Affine): [optional]
-            affine transformation defining spatial raster data
-        output (str): [optional, requires affine arg]
-            path to export distance array as geotiff raster
-        conditional (function): [optional]
-            function which applies conditional to raster_array in order to
-            define which elements distances are calculate to
-            (default function finds distance to elements with a value of 1)
+    def __init__(self, raster_array, affine=None, conditional=None, output_path=None):
+        """build distance array from raster array
 
-    Returns
-        resulting distance array
-    """
-    if not isinstance(raster_array, np.ndarray):
-        raise TypeError("Raster array must be a numpy array")
+        Args
+            raster_array (np array):
+                array to use for distance calculations
+            affine (Affine): [optional]
+                affine transformation defining spatial raster data
+            output (str): [optional, requires affine arg]
+                path to export distance array as geotiff raster
+            conditional (function): [optional]
+                function which applies conditional to raster_array in order to
+                define which elements distances are calculate to
+                (default function finds distance to elements with a value of 1)
+        """
+        if not isinstance(raster_array, np.ndarray):
+            raise TypeError("Raster array must be a numpy array")
 
-    if affine is not None and not isinstance(affine, Affine):
-        raise TypeError("If provided, affine must be an instance of Affine class")
+        if affine is not None and not isinstance(affine, Affine):
+            raise TypeError("If provided, affine must be an instance of Affine class")
 
-    if affine is None and output is not None:
-        raise Exception("Affine is required for output")
+        if affine is None and output_path is not None:
+            raise Exception("Affine is required for output")
 
-    if affine is not None:
-        pixel_size = affine[0]
+        pixel_size = None
+        if affine is not None:
+            pixel_size = affine[0]
 
-    nrows, ncols = raster_array.shape
+        if conditional is None:
+            conditional = self.default_conditional
 
-    def default_conditional(rarray):
+        elif not callable(conditional):
+            raise Exception("Conditional must be function")
+
+
+        self.conditional = conditional
+        self.raster_array = raster_array
+        self.pixel_size = pixel_size
+        self.affine = affine
+
+        self.tree = None
+        self.dist_array = None
+
+        self._build_tree()
+        self._calculate_distance()
+
+        if output_path is not None:
+            self.output_raster(output_path)
+
+
+    def default_conditional(self, rarray):
         return rarray == 1
 
-    if conditional is None:
-        conditional = default_conditional
 
-    elif not callable(conditional):
-        raise Exception("Conditional must be function")
+    def _build_tree(self, tree_type='kdtree'):
+        # kd-tree instance
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html
+        # As of SciPy v1.6.0, cKDTree is identical to KDTree, and the name is only kept for
+        # backward compatibility. See Issue #12 for more details.
+        t_start = time.time()
+        if tree_type == "kdtree":
+            self.tree = cKDTree(data=np.array(np.where(self.conditional(self.raster_array))).T, leafsize=64)
+        print("Tree build time: {0} seconds".format(time.time() - t_start))
 
 
-    # kd-tree instance
-    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html
-    # As of SciPy v1.6.0, cKDTree is identical to KDTree, and the name is only kept for
-    # backward compatibility. See Issue #12 for more details.
-    t_start = time.time()
-    k = cKDTree(data=np.array(np.where(conditional(raster_array))).T, leafsize=64)
-    print("Tree build time: {0} seconds".format(time.time() - t_start))
+    def _calculate_distance(self):
 
-    print("Building distance array...")
-    # output array for distance raster results
-    z = np.empty(raster_array.shape, dtype=float)
-    for r in range(nrows):
+        nrows, ncols = self.raster_array.shape
+        self.dist_array = np.empty(self.raster_array.shape, dtype=float)
 
-        for c in range(ncols):
+        t_start = time.time()
 
-            cur_index = (r, c)
-            min_dist, min_index = k.query([cur_index])
-            min_dist = min_dist[0]
-            min_index = k.data[min_index[0]]
+        for r in range(nrows):
 
-            if affine is not None:
-                if cur_index[1] == min_index[1]:
-                    # columns are same meaning nearest is either vertical or self.
-                    # no correction needed, just convert to km
-                    dd_min_dist = min_dist * pixel_size
-                    km_min_dist = dd_min_dist * 111.321
+            for c in range(ncols):
+
+                cur_index = (r, c)
+                min_dist, min_index = self.tree.query([cur_index])
+                min_dist = min_dist[0]
+                min_index = self.tree.data[min_index[0]]
+
+                if self.affine is not None:
+                    if cur_index[1] == min_index[1]:
+                        # columns are same meaning nearest is either vertical or self.
+                        # no correction needed, just convert to km
+                        dd_min_dist = min_dist * self.pixel_size
+                        km_min_dist = dd_min_dist * 111.321
+
+                    else:
+                        km_min_dist = calc_haversine_distance(
+                            convert_index_to_coords(cur_index, self.affine),
+                            convert_index_to_coords(min_index, self.affine),
+                        )
+
+                    val = km_min_dist * 1000
 
                 else:
-                    km_min_dist = calc_haversine_distance(
-                        convert_index_to_coords(cur_index, affine),
-                        convert_index_to_coords(min_index, affine),
-                    )
+                    val = min_dist
 
-                val = km_min_dist * 1000
+                self.dist_array[r][c] = val
 
-            else:
-                val = min_dist
-
-            z[r][c] = val
+        print("Distance calc run time: {0} seconds".format(round(time.time() - t_start, 2)))
 
 
-
-    print("Total run time: {0} seconds".format(round(time.time() - t_start, 2)))
-
-    if output is not None:
-        export_raster(z, affine, output)
-
-    return z
+    def output_raster(self, output_path):
+        export_raster(self.dist_array, self.affine, output_path)
