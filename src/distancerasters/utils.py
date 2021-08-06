@@ -61,6 +61,11 @@ def rasterize(
     https://rasterio.readthedocs.io/en/latest/topics/features.html
     https://rasterio.readthedocs.io/en/latest/api/rasterio.features.html
 
+
+    TODO:
+    could also use lookup dict with attribute arg for non-binary rasters
+    where attribute value is not numeric
+
     Args
         vectors:
             features input, see rasterstats for acceptable inputs
@@ -116,59 +121,22 @@ def rasterize(
     else:
         raise Exception("Must provide either pixel_size and bounds or affine and shape")
 
+
+    features_iter = read_features(vectors, layer)
+
     if attribute is None:
-        features_iter = read_features(vectors, layer)
         feats = [
             (feat["geometry"], default_value)
             for feat in features_iter
             if feat["geometry"] is not None
         ]
     else:
-        if type(vectors).__name__ == "GeoDataFrame":
-            feats = [
-                (feat["geometry"], feat[str(attribute)])
-                for _, feat in vectors.iterrows()
-            ]
+        feats = [
+            (feat["geometry"], feat["properties"][str(attribute)])
+            for feat in features_iter
+            if feat["geometry"] is not None
+        ]
 
-        elif isinstance(vectors, str):
-
-            try:
-                feats = [
-                    (feat["geometry"], feat["properties"][str(attribute)])
-                    for feat in fiona.open(vectors, "r", layer=layer)
-                ]
-
-            except (
-                AssertionError,
-                TypeError,
-                IOError,
-                OSError,
-                fiona.errors.DriverError,
-            ):
-                raise Exception("Cannot open file path provided using Fiona")
-
-        else:
-            try:
-                # Is vectors iterable?
-                # See discussion at https://stackoverflow.com/q/1952464
-                iter(vectors)
-            except:
-                # vectors is not iterable
-                raise TypeError(
-                    "Attribute option currently only supports GeoPandas "
-                    "GeoDataFrames or paths to files which can be opened "
-                    "by Fiona"
-                )
-            else:
-                # vectors is iterable
-                feats = [
-                    (feat["geometry"], feat["properties"][str(attribute)])
-                    for feat in vectors
-                ]
-
-    # TODO:
-    # could also use lookup dict with attribute arg for non-binary rasters
-    # where attribute value is not numeric
 
     rv_array = features.rasterize(
         feats,
