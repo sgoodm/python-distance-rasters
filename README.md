@@ -32,8 +32,21 @@ pixel_size = 0.01
 # rasterize vector data and output to geotiff
 rv_array, affine = dr.rasterize(shp, pixel_size=pixel_size, bounds=shp.bounds, output="examples/linestrings_rasterized_binary.tif")
 
-# option to manually export rasterized vector data
-# dr.export_raster(rv_array, affine, "linestrings_rasterized_binary.tif")
+"""
+# you can manually export rasterized vector data if needed
+
+dr.export_raster(rv_array, affine, "linestrings_rasterized_binary.tif")
+
+
+# you can also load an existing raster directly to use for distance calculations
+
+import rasterio
+
+with rasterio.open("examples/linestrings_rasterized_binary.tif") as src:
+    affine = src.transform()
+    rv_array = src.read(1)
+
+"""
 
 # function to define which cells from rasterized input to calculate distance to
 #   - this is the default function, and does not need to be explicity passed to class
