@@ -43,7 +43,7 @@ dr.export_raster(rv_array, affine, "linestrings_rasterized_binary.tif")
 import rasterio
 
 with rasterio.open("examples/linestrings_rasterized_binary.tif") as src:
-    affine = src.transform()
+    affine = src.transform
     rv_array = src.read(1)
 
 """
@@ -73,6 +73,13 @@ The resulting distance raster indicates the distance to the line segment. In the
 ![Stylized Example Result](https://github.com/sgoodm/python-distance-rasters/blob/master/examples/styled_example_result.png)
 
 An additional example is included in  `examples/adv_rasterization_example.py` to demonstrate how multiple sets of vector data can be combined to create a distance raster. This example also illustrates how the area for which distances are calculated can be adjusted based on a user's needs.
+
+
+### Usage Tips \& Information
+
+- Distance-rasters primarily uses an implementation of the [Haversine formula](https://en.wikipedia.org/wiki/Haversine_formula) to calculate distance in kilometers
+- For the best results, convert your data to EPSG 4326 (i.e., "WGS84") before using distance-rasters. Performing this conversion prior to using distance-rasters allows the package to remain lightweight and return results fast and accurately.
+- If you do not want to convert your data to EPSG 4326, or are using non-geographic data already in a raster/array format (i.e., an abritrary grid) you can pass the data to the `DistanceRaster` class without an `affine` or `output_path` argument in order to use a simple Euclidean/index based distance calculation.
 
 
 ## Installation
