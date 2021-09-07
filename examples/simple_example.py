@@ -24,7 +24,7 @@ dr.export_raster(rv_array, affine, "linestrings_rasterized_binary.tif")
 import rasterio
 
 with rasterio.open("examples/linestrings_rasterized_binary.tif") as src:
-    affine = src.transform()
+    affine = src.transform
     rv_array = src.read(1)
 
 """
@@ -39,6 +39,7 @@ def raster_conditional(rarray):
 my_dr = dr.DistanceRaster(rv_array, affine=affine,
                           output_path="examples/linestrings_distance_raster.tif",
                           conditional=raster_conditional)
+
 
 # dist_array = my_dr.dist_array
 
