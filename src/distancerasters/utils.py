@@ -267,9 +267,7 @@ def calc_euclidean_distance(p1, p2):
     radius = 6371.0
 
     delta_lat = math.radians(lat2 - lat1)
-    avg_lat = math.radians((lat1 + lat2) / 2)
     delta_lon = math.radians(lon2 - lon1)
 
-    a = (math.cos(avg_lat) * delta_lon) ** 2
-    b = math.sqrt((delta_lat**2) + a)
-    return radius * b
+    a = math.sqrt((delta_lat ** 2) + (delta_lon ** 2))
+    return radius * a
