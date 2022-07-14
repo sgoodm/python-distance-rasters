@@ -217,7 +217,8 @@ def convert_index_to_coords(index, affine):
 
 
 def calc_haversine_distance(p1, p2):
-    """calculate haversine distance between two points
+    """
+    calculate haversine distance between two points
 
     # formula info
     # https://en.wikipedia.org/wiki/Haversine_formula
@@ -246,3 +247,29 @@ def calc_haversine_distance(p1, p2):
     # km
     d = radius * c
     return d
+
+def calc_euclidean_distance(p1, p2):
+    """
+    calculate euclidean distance between two points
+
+    # formula info
+    # https://en.wikipedia.org/wiki/Euclidean_distance
+
+    Args
+        p1: tuple of (longitude, latitude) format containing int or float values
+        p2: tuple of (longitude, latitude) format containing int or float values
+    Returns
+        d (float): euclidean distance between given points p1 and p2
+    """
+    lon1, lat1 = p1
+    lon2, lat2 = p2
+    # km
+    radius = 6371.0
+
+    delta_lat = math.radians(lat2 - lat1)
+    avg_lat = math.radians((lat1 + lat2) / 2)
+    delta_lon = math.radians(lon2 - lon1)
+
+    a = (math.cos(avg_lat) * delta_lon) ** 2
+    b = math.sqrt((delta_lat**2) + a)
+    return radius * b

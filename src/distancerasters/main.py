@@ -2,12 +2,12 @@ import time
 import numpy as np
 from affine import Affine
 from scipy.spatial import cKDTree
-from .utils import export_raster, convert_index_to_coords, calc_haversine_distance
+from .utils import export_raster, convert_index_to_coords, calc_haversine_distance, calc_euclidean_distance
 
 
 class DistanceRaster(object):
 
-    def __init__(self, raster_array, affine=None, conditional=None, output_path=None):
+    def __init__(self, raster_array, affine=None, conditional=None, distance_formula="haversine", output_path=None):
         """build distance array from raster array
 
         Args
@@ -15,12 +15,15 @@ class DistanceRaster(object):
                 array to use for distance calculations
             affine (Affine): [optional]
                 affine transformation defining spatial raster data
-            output (str): [optional, requires affine arg]
-                path to export distance array as geotiff raster
+            distance_formula ("haversine" | "euclidean"): [optional]
+                formula to use in calculating distances
+                generally haversine is more accurate, and euclidean is faster
             conditional (function): [optional]
                 function which applies conditional to raster_array in order to
                 define which elements distances are calculate to
                 (default function finds distance to elements with a value of 1)
+            output_path (str): [optional, requires affine arg]
+                path to export distance array as geotiff raster
         """
         if not isinstance(raster_array, np.ndarray):
             raise TypeError("Raster array must be a numpy array")
@@ -31,6 +34,13 @@ class DistanceRaster(object):
         if affine is None and output_path is not None:
             raise Exception("Affine is required for output")
 
+        if distance_formula == "haversine":
+            self.distance_function = calc_haversine_distance
+        elif distance_formula == "euclidean":
+            self.distance_function = calc_euclidean_distance
+        else:
+            raise ValueError("Distance formula must be \"haversine\" or \"euclidean\"")
+
         pixel_size = None
         if affine is not None:
             pixel_size = affine[0]
@@ -40,7 +50,6 @@ class DistanceRaster(object):
 
         elif not callable(conditional):
             raise Exception("Conditional must be function")
-
 
         self.conditional = conditional
         self.raster_array = raster_array
@@ -96,7 +105,7 @@ class DistanceRaster(object):
                         km_min_dist = dd_min_dist * 111.321
 
                     else:
-                        km_min_dist = calc_haversine_distance(
+                        km_min_dist = self.distance_function(
                             convert_index_to_coords(cur_index, self.affine),
                             convert_index_to_coords(min_index, self.affine),
                         )
