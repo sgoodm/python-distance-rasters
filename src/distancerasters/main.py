@@ -1,7 +1,7 @@
 import time
 import numpy as np
 from affine import Affine
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 from .utils import export_raster, convert_index_to_coords, calc_haversine_distance
 
 
@@ -63,12 +63,10 @@ class DistanceRaster(object):
 
     def _build_tree(self, tree_type='kdtree'):
         # kd-tree instance
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html
-        # As of SciPy v1.6.0, cKDTree is identical to KDTree, and the name is only kept for
-        # backward compatibility. See Issue #12 for more details.
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html
         t_start = time.time()
         if tree_type == "kdtree":
-            self.tree = cKDTree(data=np.array(np.where(self.conditional(self.raster_array))).T, leafsize=64)
+            self.tree = KDTree(data=np.array(np.where(self.conditional(self.raster_array))).T, leafsize=64)
         print("Tree build time: {0} seconds".format(round(time.time() - t_start, 4)))
 
 
