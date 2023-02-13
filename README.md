@@ -9,8 +9,7 @@ Generate distance raster using arbitrary sets of spatial features
 
 Distance-rasters was designed to support the generation of rasters in which each pixel is the distance to a discrete set of user defined locations. Common uses include calculating the distances to roads, water features, or cities. Distance-rasters is flexible and can support a wide range of use cases and input data, and provides the tools necessary for rasterizing vector features.
 
-The most notable existing tool for calculating raster distance or proximity is GDAL's `gdal_proximity.py` (See: https://gdal.org/programs/gdal_proximity.html#gdal-proximity
-) which while powerful, is not flexible enough for many use cases and has practical limitations when integrating distance calculations into broader workflows. Distance-rasters offers a simple, flexible, and Pythonic alternative.
+The most notable existing tool for calculating raster distance or proximity is GDAL's [`gdal_proximity.py`](https://gdal.org/programs/gdal_proximity.html#gdal-proximity) which while powerful, is not flexible enough for many use cases and has practical limitations when integrating distance calculations into broader workflows. Distance-rasters offers a simple, flexible, and Pythonic alternative.
 
 See the Example section below for a simple example of using distance-rasters. Distance-rasters is extremely fast for small areas at moderate resolution, and has performed well when tested at global scales with moderate-coarse resolution (1km).
 
@@ -19,7 +18,7 @@ See the Example section below for a simple example of using distance-rasters. Di
 
 The below example calculates the distance to a rough approximation of a section of the Niger river in Mali. See the `examples` folder for the code and data.
 
-```
+``` python
 import fiona
 import distancerasters as dr
 
@@ -88,19 +87,19 @@ An additional example is included in  `examples/adv_rasterization_example.py` to
 ### Using pip
 
 The latest version of distance-rasters is [available on PyPi](https://pypi.org/project/distancerasters/), and can be installed with Pip:
-```
+```sh
 pip install distancerasters
 ```
 
 If you'd like to install the latest development (alpha) release, there may be a newer version on [TestPyPi](https://test.pypi.org/project/distancerasters/):
-```
+```sh
 pip install -i https://test.pypi.org/simple/ distancerasters
 ```
 
 ### From source
 
 To install this package from source, first clone this repository, then use pip to install:
-```
+```sh
 git clone git@github.com:sgoodm/python-distance-rasters.git
 cd python-distance-rasters
 pip install .
@@ -121,7 +120,7 @@ You can run tests and coverage checks locally, or you can fork the repository an
 
 
 To run tests and coverage checks locally, you can use the following commands:
-```
+```sh
 pip install pytest coverage shapely geopandas
 coverage run -m pytest ./
 coverage html
