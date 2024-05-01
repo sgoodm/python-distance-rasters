@@ -12,7 +12,7 @@ from .utils import (calc_haversine_distance, convert_index_to_coords,
 
 class DistanceRaster(object):
 
-    def __init__(self, raster_array, affine=None, conditional=None, output_path=None):
+    def __init__(self, raster_array, affine=None, conditional=None, output_path=None, progress_bar=False):
         """build distance array from raster array
 
         Args
@@ -51,6 +51,7 @@ class DistanceRaster(object):
         self.raster_array = raster_array
         self.pixel_size = pixel_size
         self.affine = affine
+        self.progress_bar = progress_bar
 
         self.tree = None
         self.dist_array = None
@@ -82,34 +83,33 @@ class DistanceRaster(object):
 
         t_start = time.time()
 
-        for r in range(nrows):
+        row_col_iterable = product(range(nrows), range(ncols))
 
-            for c in range(ncols):
+        for r, c in tqdm(row_col_iterable, total=nrows*ncols, disable=(not self.progress_bar)):
+            cur_index = (r, c)
+            min_dist, min_index = self.tree.query([cur_index])
+            min_dist = min_dist[0]
+            min_index = self.tree.data[min_index[0]]
 
-                cur_index = (r, c)
-                min_dist, min_index = self.tree.query([cur_index])
-                min_dist = min_dist[0]
-                min_index = self.tree.data[min_index[0]]
-
-                if self.affine is not None:
-                    if cur_index[1] == min_index[1]:
-                        # columns are same meaning nearest is either vertical or self.
-                        # no correction needed, just convert to km
-                        dd_min_dist = min_dist * self.pixel_size
-                        km_min_dist = dd_min_dist * 111.321
-
-                    else:
-                        km_min_dist = calc_haversine_distance(
-                            convert_index_to_coords(cur_index, self.affine),
-                            convert_index_to_coords(min_index, self.affine),
-                        )
-
-                    val = km_min_dist * 1000
+            if self.affine is not None:
+                if cur_index[1] == min_index[1]:
+                    # columns are same meaning nearest is either vertical or self.
+                    # no correction needed, just convert to km
+                    dd_min_dist = min_dist * self.pixel_size
+                    km_min_dist = dd_min_dist * 111.321
 
                 else:
-                    val = min_dist
+                    km_min_dist = calc_haversine_distance(
+                        convert_index_to_coords(cur_index, self.affine),
+                        convert_index_to_coords(min_index, self.affine),
+                    )
 
-                self.dist_array[r][c] = val
+                val = km_min_dist * 1000
+
+            else:
+                val = min_dist
+
+            self.dist_array[r][c] = val
 
         print("Distance calc run time: {0} seconds".format(round(time.time() - t_start, 4)))
 
