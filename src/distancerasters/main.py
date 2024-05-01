@@ -1,8 +1,13 @@
 import time
+from itertools import product
+
 import numpy as np
 from affine import Affine
 from scipy.spatial import KDTree
-from .utils import export_raster, convert_index_to_coords, calc_haversine_distance
+from tqdm import tqdm
+
+from .utils import (calc_haversine_distance, convert_index_to_coords,
+                    export_raster)
 
 
 class DistanceRaster(object):
