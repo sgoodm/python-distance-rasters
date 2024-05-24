@@ -121,7 +121,7 @@ You can run tests and coverage checks locally, or you can fork the repository an
 
 To run tests and coverage checks locally, you can use the following commands:
 ```sh
-pip install pytest coverage shapely geopandas
+pip install pytest coverage
 coverage run -m pytest ./
 coverage html
 ```
