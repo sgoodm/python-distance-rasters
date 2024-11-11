@@ -1,6 +1,34 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+authors = [{ name = "Seth Goodman", email = "sgoodman@aiddata.wm.edu" }]
+classifiers = ["Programming Language :: Python :: 3"]
+keywords = ["raster", "distance", "spatial"]
+license = { text = "BSD 3-Clause License" }
+name = "distancerasters"
+version = "0.3.3"
+description = "Generate distance raster using arbitrary sets of spatial features"
+readme = "README.md"
+requires-python = ">= 3.9"
+dependencies = [
+    "numpy",
+    "rasterio",
+    "fiona",
+    "affine",
+    "scipy>=1.6.0",
+    "rasterstats",
+    "tqdm",
+]
+
+[project.urls]
+source = "https://github.com/sgoodm/python-distance-rasters"
+issues = "https://github.com/sgoodm/python-distance-rasters/issues"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.4",
+    "geopandas>=1.0.1",
+    "pytest>=8.3.3",
+]
