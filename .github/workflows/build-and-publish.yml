@@ -32,7 +32,7 @@ jobs:
         if [ "${GITHUB_REF#refs/tags/}" != "${VERSION}" ]; then exit 1; fi
     - name: Publish to Test PyPI 📦
       if: contains(env.VERSION, 'a')
-      uses: pypa/gh-action-pypi-publish@v1.4.2
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
     - name: Publish to PyPI 📦
       if: |
         !contains(env.VERSION, 'a')
-      uses: pypa/gh-action-pypi-publish@v1.4.2
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
