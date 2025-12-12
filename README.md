@@ -74,6 +74,27 @@ The resulting distance raster indicates the distance to the line segment. In the
 An additional example is included in  `examples/adv_rasterization_example.py` to demonstrate how multiple sets of vector data can be combined to create a distance raster. This example also illustrates how the area for which distances are calculated can be adjusted based on a user's needs.
 
 
+### Using GeoPandas
+
+You can also use GeoPandas GeoDataFrames directly with distance-rasters:
+
+``` python
+import geopandas as gpd
+import distancerasters as dr
+
+# load vector data as GeoDataFrame
+gdf = gpd.read_file("examples/linestrings.geojson")
+
+# rasterize the GeoDataFrame
+rv_array, affine = dr.rasterize(gdf, pixel_size=0.01, bounds=gdf.total_bounds)
+
+# generate distance raster
+my_dr = dr.DistanceRaster(rv_array, affine=affine)
+```
+
+Note: GeoPandas is not installed by default. Install it separately with `pip install geopandas`.
+
+
 ### Usage Tips \& Information
 
 - Distance-rasters primarily uses an implementation of the [Haversine formula](https://en.wikipedia.org/wiki/Haversine_formula) to calculate distance in kilometers
