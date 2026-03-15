@@ -27,9 +27,11 @@ issues = "https://github.com/sgoodm/python-distance-rasters/issues"
 [dependency-groups]
 dev = [
     "coverage>=7.6.4",
+    "coveralls",
     "geopandas>=1.0.1",
     "maturin>=1.12.6",
     "pytest>=8.3.3",
+    "pytest-cov",
     "shapely",
 ]
 
