@@ -1,12 +1,13 @@
 import os
 import math
+import os
 from warnings import warn
-import fiona
-import rasterio
-from rasterio import features
-from affine import Affine
-from rasterstats.io import read_features
+
 import numpy as np
+import rasterio
+from affine import Affine
+from rasterio import features
+from rasterstats.io import read_features
 
 
 def rasterize(

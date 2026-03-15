@@ -17,13 +17,15 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install Rust 🦀
+      uses: dtolnay/rust-toolchain@stable
     - name: Install dependencies ⚙️
       run: |
         sudo apt-get update
         sudo apt-get install libgdal-dev
         python -m pip install --upgrade pip
-        pip install .
-        pip install pytest pytest-cov shapely build geopandas
+        pip install maturin pytest pytest-cov shapely geopandas numpy rasterio fiona affine rasterstats
+        maturin develop --release
     - name: Test with pytest ✅
       run: |
         pytest --cov=distancerasters
@@ -35,6 +37,3 @@ jobs:
       run: |
         pip install coveralls
         coveralls
-    - name: Try building a binary wheel and a source tarball 🚧
-      run: |
-        python -m build --sdist --wheel --outdir dist/ .
