@@ -22,27 +22,33 @@ pub fn calculate_distances(
         return vec![f64::INFINITY; nrows * ncols];
     }
 
-    // kiddo's KdTree requires (point, content) pairs; we store the index as content
+    // Build a 2-D k-d tree from the input points for fast nearest-neighbor lookups.
+    // Each entry stores the point's position and its index into `indices`.
     let mut tree: KdTree<f64, 2> = KdTree::new();
     for (i, point) in indices.iter().enumerate() {
         tree.add(point, i as u64);
     }
 
+    // Iterate over every pixel in parallel (one thread per row via rayon).
+    // For each pixel, find the closest input point and compute the distance.
     let tree_ref = &tree;
     let result: Vec<f64> = (0..nrows)
         .into_par_iter()
         .flat_map_iter(|r| {
             (0..ncols).map(move |c| {
+                // Look up the nearest input point to this pixel in the k-d tree
                 let query = [r as f64, c as f64];
                 let nearest = tree_ref.nearest_one::<SquaredEuclidean>(&query);
                 let nearest_idx = nearest.item as usize;
                 let nearest_point = indices[nearest_idx];
                 let min_dist = nearest.distance.sqrt();
 
+                // If affine params are provided, convert pixel distance to
+                // geographic distance (meters) using the haversine formula.
+                // Otherwise, return raw Euclidean distance in pixel units.
                 match affine_params {
                     Some((pixel_size, xmin, ymax)) => {
                         let km_dist = if (c as f64) == nearest_point[1] {
-                            // Same column: purely vertical, simple conversion
                             min_dist * pixel_size * 111.321
                         } else {
                             let p1 = haversine::index_to_coords(
@@ -57,13 +63,12 @@ pub fn calculate_distances(
                             );
                             haversine::haversine(p1, p2)
                         };
-                        km_dist * 1000.0
+                        km_dist * 1000.0 // convert km → meters
                     }
                     None => min_dist,
                 }
             })
         })
         .collect();
-
     result
 }

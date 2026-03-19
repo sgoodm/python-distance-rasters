@@ -1,11 +1,12 @@
 /// Calculate haversine distance between two points.
 ///
 /// Points are in (longitude, latitude) format.
-/// Returns distance in kilometers.
+/// Returns haversine distance between given points p1 and p2.
 pub fn haversine(p1: (f64, f64), p2: (f64, f64)) -> f64 {
     let (lon1, lat1) = p1;
     let (lon2, lat2) = p2;
 
+    // Mean radius of the Earth in km
     let radius: f64 = 6371.0;
 
     let delta_lat = (lat2 - lat1).to_radians();

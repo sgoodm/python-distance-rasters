@@ -1,4 +1,3 @@
-import os
 import math
 import os
 from warnings import warn
@@ -81,7 +80,6 @@ def rasterize(
         and isinstance(shape, tuple)
         and len(shape) == 2
     ):
-
         if pixel_size is not None and pixel_size != affine[0]:
             warn("Ignoring `pixel_size` provided due to valid affine and shape input.")
 
@@ -99,7 +97,6 @@ def rasterize(
     else:
         raise Exception("Must provide either pixel_size and bounds or affine and shape")
 
-
     features_iter = read_features(vectors, layer)
 
     if attribute is None:
@@ -114,7 +111,6 @@ def rasterize(
             for feat in features_iter
             if feat["geometry"] is not None
         ]
-
 
     rv_array = features.rasterize(
         feats,
@@ -133,7 +129,6 @@ def rasterize(
 
 
 def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
-
     if not rasterio.dtypes.check_dtype(out_dtype):
         raise ValueError("out_dtype not recognized by rasterio")
 
@@ -163,8 +158,7 @@ def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
 
 
 def get_affine_and_shape(bounds, pixel_size):
-    """Get affine and shape from bounds and pixel size
-    """
+    """Get affine and shape from bounds and pixel size"""
     try:
         pixel_size = float(pixel_size)
     except:

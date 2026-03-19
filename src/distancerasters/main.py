@@ -4,12 +4,19 @@ import numpy as np
 from affine import Affine
 
 from distancerasters._distancerasters import calculate_distances
+
 from .utils import export_raster
 
 
 class DistanceRaster(object):
-
-    def __init__(self, raster_array, affine=None, conditional=None, output_path=None, progress_bar=False):
+    def __init__(
+        self,
+        raster_array,
+        affine=None,
+        conditional=None,
+        output_path=None,
+        progress_bar=False,
+    ):
         """build distance array from raster array
 
         Args
@@ -50,10 +57,8 @@ class DistanceRaster(object):
         if output_path is not None:
             self.output_raster(output_path)
 
-
     def default_conditional(self, rarray):
         return rarray == 1
-
 
     def _calculate_distance(self):
         t_start = time.time()
@@ -65,12 +70,17 @@ class DistanceRaster(object):
 
         affine_params = None
         if self.affine is not None:
-            affine_params = (float(self.affine[0]), float(self.affine[2]), float(self.affine[5]))
+            affine_params = (
+                float(self.affine[0]),
+                float(self.affine[2]),
+                float(self.affine[5]),
+            )
 
         t_start = time.time()
         self.dist_array = calculate_distances(indices, nrows, ncols, affine_params)
-        print("Distance calc run time: {} seconds".format(round(time.time() - t_start, 4)))
-
+        print(
+            "Distance calc run time: {} seconds".format(round(time.time() - t_start, 4))
+        )
 
     def output_raster(self, output_path):
         export_raster(self.dist_array, self.affine, output_path)

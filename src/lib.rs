@@ -24,15 +24,17 @@ fn calculate_distances<'py>(
 ) -> Bound<'py, PyArray2<f64>> {
     let indices_array = indices.as_array();
 
-    // Convert numpy array to Vec of [f64; 2]
+    // Convert numpy's row views into owned [f64; 2] arrays to pass into Rust functions
     let points: Vec<[f64; 2]> = indices_array
         .rows()
         .into_iter()
         .map(|row| [row[0], row[1]])
         .collect();
 
+    // py.detach() releases the GIL so Rayon's parallel threads can run freely
     let result = py.detach(|| distance::calculate_distances(&points, nrows, ncols, affine_params));
 
+    // Reshape the flat result vec back into a 2D numpy array (nrows × ncols)
     PyArray2::from_vec2(
         py,
         &result
@@ -43,6 +45,7 @@ fn calculate_distances<'py>(
     .expect("Failed to create output array")
 }
 
+// register this as a Python extension module named `_distancerasters`.
 #[pymodule]
 fn _distancerasters(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(calculate_distances, m)?)?;
