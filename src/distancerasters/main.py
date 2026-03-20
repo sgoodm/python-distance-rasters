@@ -15,7 +15,6 @@ class DistanceRaster(object):
         affine=None,
         conditional=None,
         output_path=None,
-        progress_bar=False,
     ):
         """build distance array from raster array
 
