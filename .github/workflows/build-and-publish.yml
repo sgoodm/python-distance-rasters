@@ -42,6 +42,7 @@ jobs:
     needs: [build-wheels, build-sdist]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: dist
