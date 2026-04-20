@@ -1,6 +1,0 @@
-numpy
-rasterio
-fiona
-affine
-scipy
-rasterstats

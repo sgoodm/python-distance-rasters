@@ -1,0 +1,15 @@
+[package]
+name = "distancerasters"
+version = "0.5.0"
+edition = "2024"
+license = "BSD-3-Clause"
+
+[lib]
+name = "_distancerasters"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.28.2", features = ["extension-module"] }
+numpy = "0.28"
+kiddo = "5.2.4"
+rayon = "1.11.0"
