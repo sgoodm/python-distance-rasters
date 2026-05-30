@@ -1,6 +1,6 @@
 [package]
 name = "distancerasters"
-version = "0.4.0-a2"
+version = "0.4.0"
 edition = "2024"
 license = "BSD-3-Clause"
 
