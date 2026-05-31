@@ -70,6 +70,10 @@ def test_get_affine_and_shape():
 def test_bad_get_affine_and_shape():
     with pytest.raises(TypeError):
         get_affine_and_shape((0, 0, 0, 0), "string")
+    with pytest.raises(ValueError):
+        get_affine_and_shape((0, 0, 1, 1), 0)
+    with pytest.raises(ValueError):
+        get_affine_and_shape((0, 0, 1, 1), -0.5)
 
 
 def test_rasterize(example_shape, example_raster, example_path):
@@ -181,16 +185,16 @@ def test_export_raster(example_raster, example_affine, example_path):
 
 
 def test_bad_export_raster(example_raster, example_affine, example_path):
-
-    # TODO: pass bad raster to export_raster
-
-    # Try passing a bad output datatype
     with pytest.raises(ValueError):
         export_raster(
             example_raster, example_affine, example_path, out_dtype="bad_dt42"
         )
 
-    # TODO: pass bad nodata to export_raster
+
+def test_export_raster_nodata(example_raster, example_affine, example_path):
+    export_raster(example_raster, example_affine, example_path, nodata=-9999)
+    with rasterio.open(example_path) as src:
+        assert src.nodata == -9999
 
 
 def test_convert_index_to_coords(example_affine):
@@ -199,6 +203,11 @@ def test_convert_index_to_coords(example_affine):
 
     # Random index with example affine
     assert convert_index_to_coords((5, 8), example_affine) == (12.75, -7.25)
+
+
+def test_calc_haversine_distance_symmetry():
+    p1, p2 = (10.0, 20.0), (30.0, 40.0)
+    assert calc_haversine_distance(p1, p2) == calc_haversine_distance(p2, p1)
 
 
 def test_calc_haversine_distance():

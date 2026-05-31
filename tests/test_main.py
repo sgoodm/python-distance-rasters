@@ -83,12 +83,28 @@ def test_bad_build_distance_array(example_raster_array):
         # Pass DistanceRaster a bad affine
         DistanceRaster(example_raster_array, affine="not_an_affine")
 
-    # perhaps this should be a more specific type of exception?
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         # Pass DistanceRaster an output without an affine
         DistanceRaster(example_raster_array, output_path="just_output")
 
-    # perhaps this should be a more specific type of exception?
-    with pytest.raises(Exception):
+    with pytest.raises(TypeError):
         # Pass DistanceRaster an uncallable conditional
         DistanceRaster(example_raster_array, conditional="not_a_function")
+
+
+def test_empty_raster():
+    empty = np.zeros((4, 4))
+    dr = DistanceRaster(empty)
+    assert np.all(np.isinf(dr.dist_array))
+
+
+def test_custom_conditional(example_raster_array):
+    # Conditional that matches nothing -> all inf
+    dr = DistanceRaster(example_raster_array, conditional=lambda r: r > 1)
+    assert np.all(np.isinf(dr.dist_array))
+
+    # Conditional targeting zeros: [0][0] is 0 so distance should be 0 there,
+    # and [1][1] is 1 so its nearest zero is 1 pixel away
+    dr = DistanceRaster(example_raster_array, conditional=lambda r: r == 0)
+    assert dr.dist_array[0][0] == 0
+    assert dr.dist_array[1][1] == 1
