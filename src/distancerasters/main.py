@@ -1,3 +1,4 @@
+import logging
 import time
 
 import numpy as np
@@ -6,6 +7,8 @@ from affine import Affine
 from distancerasters._distancerasters import calculate_distances
 
 from .utils import export_raster
+
+logger = logging.getLogger(__name__)
 
 
 class DistanceRaster(object):
@@ -23,7 +26,7 @@ class DistanceRaster(object):
                 array to use for distance calculations
             affine (Affine): [optional]
                 affine transformation defining spatial raster data
-            output (str): [optional, requires affine arg]
+            output_path (str): [optional, requires affine arg]
                 path to export distance array as geotiff raster
             conditional (function): [optional]
                 function which applies conditional to raster_array in order to
@@ -37,13 +40,13 @@ class DistanceRaster(object):
             raise TypeError("If provided, affine must be an instance of Affine class")
 
         if affine is None and output_path is not None:
-            raise Exception("Affine is required for output")
+            raise ValueError("Affine is required for output")
 
         if conditional is None:
             conditional = self.default_conditional
 
         elif not callable(conditional):
-            raise Exception("Conditional must be function")
+            raise TypeError("Conditional must be callable")
 
         self.conditional = conditional
         self.raster_array = raster_array
@@ -63,7 +66,7 @@ class DistanceRaster(object):
         t_start = time.time()
         mask = self.conditional(self.raster_array)
         indices = np.array(np.where(mask)).T.astype(np.float64)
-        print("Tree build time: {} seconds".format(round(time.time() - t_start, 4)))
+        logger.info("Tree build time: %s seconds", round(time.time() - t_start, 4))
 
         nrows, ncols = self.raster_array.shape
 
@@ -77,9 +80,7 @@ class DistanceRaster(object):
 
         t_start = time.time()
         self.dist_array = calculate_distances(indices, nrows, ncols, affine_params)
-        print(
-            "Distance calc run time: {} seconds".format(round(time.time() - t_start, 4))
-        )
+        logger.info("Distance calc run time: %s seconds", round(time.time() - t_start, 4))
 
     def output_raster(self, output_path):
         export_raster(self.dist_array, self.affine, output_path)
