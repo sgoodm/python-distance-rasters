@@ -38,11 +38,6 @@ def rasterize(
     https://rasterio.readthedocs.io/en/latest/topics/features.html
     https://rasterio.readthedocs.io/en/latest/api/rasterio.features.html
 
-
-    TODO:
-    could also use lookup dict with attribute arg for non-binary rasters
-    where attribute value is not numeric
-
     Args
         vectors:
             features input, see rasterstats for acceptable inputs
@@ -95,7 +90,7 @@ def rasterize(
         affine, shape = get_affine_and_shape(bounds=bounds, pixel_size=pixel_size)
 
     else:
-        raise Exception("Must provide either pixel_size and bounds or affine and shape")
+        raise ValueError("Must provide either pixel_size and bounds or affine and shape")
 
     features_iter = read_features(vectors, layer)
 
@@ -129,16 +124,13 @@ def rasterize(
 
 
 def export_raster(raster, affine, path, out_dtype="float64", nodata=None):
+    """Export raster array to geotiff"""
     if not rasterio.dtypes.check_dtype(out_dtype):
         raise ValueError("out_dtype not recognized by rasterio")
 
-    """Export raster array to geotiff
-    """
-    # affine takes upper left
-    # (writing to asc directly used lower left)
     meta = {
         "count": 1,
-        "crs": {"init": "epsg:4326"},
+        "crs": "EPSG:4326",
         "dtype": out_dtype,
         "transform": affine,
         "driver": "GTiff",
@@ -161,8 +153,11 @@ def get_affine_and_shape(bounds, pixel_size):
     """Get affine and shape from bounds and pixel size"""
     try:
         pixel_size = float(pixel_size)
-    except:
+    except (ValueError, TypeError):
         raise TypeError("Invalid pixel size (could not be converted to float)")
+
+    if pixel_size <= 0:
+        raise ValueError("pixel_size must be positive")
 
     psi = 1 / pixel_size
 
