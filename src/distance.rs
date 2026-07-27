@@ -1,4 +1,5 @@
-use kiddo::{KdTree, SquaredEuclidean};
+use kiddo::immutable::float::kdtree::ImmutableKdTree;
+use kiddo::SquaredEuclidean;
 use rayon::prelude::*;
 
 use crate::haversine;
@@ -23,11 +24,14 @@ pub fn calculate_distances(
     }
 
     // Build a 2-D k-d tree from the input points for fast nearest-neighbor lookups.
-    // Each entry stores the point's position and its index into `indices`.
-    let mut tree: KdTree<f64, 2> = KdTree::new();
-    for (i, point) in indices.iter().enumerate() {
-        tree.add(point, i as u64);
-    }
+    // Uses the immutable/bulk-load variant: it's built once from the full point
+    // set and only queried afterward (never modified), and unlike the mutable
+    // KdTree's one-at-a-time `add()`, its construction doesn't panic when many
+    // points share the same coordinate on one axis (e.g. a raster row/column
+    // that's mostly or entirely "true" — common for dense binary masks like
+    // road networks) — see kiddo's fixed bucket-size limit on incremental
+    // insertion (default 32) vs. this variant's count-based median partitioning.
+    let tree: ImmutableKdTree<f64, u64, 2, 32> = ImmutableKdTree::new_from_slice(indices);
 
     // Iterate over every pixel in parallel (one thread per row via rayon).
     // For each pixel, find the closest input point and compute the distance.
@@ -71,4 +75,29 @@ pub fn calculate_distances(
         })
         .collect();
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn many_points_same_row_does_not_panic() {
+        // 500 points all sharing row=10.0, spread across many columns.
+        // This exceeds kiddo's default incremental-insertion bucket size
+        // (32) on one axis; the mutable KdTree used to panic here.
+        let indices: Vec<[f64; 2]> = (0..500).map(|c| [10.0, c as f64]).collect();
+        let result = calculate_distances(&indices, 50, 500, None);
+        assert_eq!(result.len(), 50 * 500);
+        assert_eq!(result[10 * 500], 0.0);
+    }
+
+    #[test]
+    fn many_points_same_column_does_not_panic() {
+        // same scenario, transposed: many points sharing col=10.0
+        let indices: Vec<[f64; 2]> = (0..500).map(|r| [r as f64, 10.0]).collect();
+        let result = calculate_distances(&indices, 500, 50, None);
+        assert_eq!(result.len(), 500 * 50);
+        assert_eq!(result[10 * 50 + 10], 0.0);
+    }
 }
